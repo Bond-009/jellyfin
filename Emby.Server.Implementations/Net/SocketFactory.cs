@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using Emby.Server.Implementations.Networking;
 using MediaBrowser.Model.Net;
-using Microsoft.Extensions.Logging;
 
 namespace Emby.Server.Implementations.Net
 {

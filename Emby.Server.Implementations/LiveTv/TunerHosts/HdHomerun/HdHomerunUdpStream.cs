@@ -59,7 +59,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
 
             var remoteAddress = IPAddress.Parse(uri.Host);
             var embyRemoteAddress = _networkManager.ParseIpAddress(uri.Host);
-            IPAddress localAddress = null;
+            IPAddress localAddress;
             using (var tcpSocket = CreateSocket(remoteAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
             {
                 try

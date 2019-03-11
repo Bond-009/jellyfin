@@ -7,7 +7,6 @@ using Emby.Server.Implementations.Net;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Model.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using UtfUnknown;

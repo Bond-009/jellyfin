@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
@@ -11,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Emby.Server.Implementations.Net;
 using Emby.Server.Implementations.Services;
-using Emby.Server.Implementations.SocketSharp;
 using MediaBrowser.Common.Extensions;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller;

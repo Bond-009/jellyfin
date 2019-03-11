@@ -1577,10 +1577,10 @@ namespace Emby.Server.Implementations
                 return cachedResult;
             }
 
-            var logPing = false;
-
 #if DEBUG
-            logPing = true;
+            const bool LogPing = true;
+#else
+            const bool LogPing = false;
 #endif
 
             try
@@ -1589,8 +1589,8 @@ namespace Emby.Server.Implementations
                 {
                     Url = apiUrl,
                     LogErrorResponseBody = false,
-                    LogErrors = logPing,
-                    LogRequest = logPing,
+                    LogErrors = LogPing,
+                    LogRequest = LogPing,
                     TimeoutMs = 5000,
                     BufferContent = false,
 

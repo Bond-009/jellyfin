@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Emby.Dlna.PlayTo;
@@ -48,7 +47,7 @@ namespace Emby.Dlna.Main
         private readonly IDeviceDiscovery _deviceDiscovery;
 
         private SsdpDevicePublisher _Publisher;
-        
+
         private readonly ISocketFactory _socketFactory;
         private readonly IEnvironmentInfo _environmentInfo;
         private readonly INetworkManager _networkManager;

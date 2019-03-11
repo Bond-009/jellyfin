@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -20,6 +19,7 @@ namespace Emby.Server.Implementations.Services
                 {
                     response.StatusCode = (int)HttpStatusCode.NoContent;
                 }
+
                 return Task.CompletedTask;
             }
 

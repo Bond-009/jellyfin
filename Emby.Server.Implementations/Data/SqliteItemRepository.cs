@@ -2738,13 +2738,13 @@ namespace Emby.Server.Implementations.Data
         {
             var elapsed = (DateTime.UtcNow - startDate).TotalMilliseconds;
 
-            int slowThreshold = 100;
-
 #if DEBUG
-            slowThreshold = 10;
+            const int SlowThreshold = 10;
+#else
+            const int SlowThreshold = 100;
 #endif
 
-            if (elapsed >= slowThreshold)
+            if (elapsed >= SlowThreshold)
             {
                 Logger.LogWarning("{0} query time (slow): {1:g}. Query: {2}",
                     methodName,
@@ -4460,7 +4460,6 @@ namespace Emby.Server.Implementations.Data
             {
                 var excludeIds = new List<string>();
 
-                var index = 0;
                 foreach (var pair in query.ExcludeProviderIds)
                 {
                     if (string.Equals(pair.Key, MetadataProviders.TmdbCollection.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -4468,13 +4467,9 @@ namespace Emby.Server.Implementations.Data
                         continue;
                     }
 
-                    var paramName = "@ExcludeProviderId" + index;
-                    excludeIds.Add("(ProviderIds is null or ProviderIds not like " + paramName + ")");
-                    if (statement != null)
-                    {
-                        statement.TryBind(paramName, "%" + pair.Key + "=" + pair.Value + "%");
-                    }
-                    index++;
+                    const string ParamName = "@ExcludeProviderId0";
+                    excludeIds.Add("(ProviderIds is null or ProviderIds not like " + ParamName + ")");
+                    statement?.TryBind(ParamName, "%" + pair.Key + "=" + pair.Value + "%");
 
                     break;
                 }
@@ -4489,7 +4484,6 @@ namespace Emby.Server.Implementations.Data
             {
                 var hasProviderIds = new List<string>();
 
-                var index = 0;
                 foreach (var pair in query.HasAnyProviderId)
                 {
                     if (string.Equals(pair.Key, MetadataProviders.TmdbCollection.ToString(), StringComparison.OrdinalIgnoreCase))
@@ -4506,17 +4500,13 @@ namespace Emby.Server.Implementations.Data
                     //      and maybe even NotTmdb=1234.
 
                     // this is a placeholder for this specific pair to correlate it in the bigger query
-                    var paramName = "@HasAnyProviderId" + index;
+                    const string ParamName = "@HasAnyProviderId0";
 
                     // this is a search for the placeholder
-                    hasProviderIds.Add("ProviderIds like " + paramName + "");
+                    hasProviderIds.Add("ProviderIds like " + ParamName + "");
 
                     // this replaces the placeholder with a value, here: %key=val%
-                    if (statement != null)
-                    {
-                        statement.TryBind(paramName, "%" + pair.Key + "=" + pair.Value + "%");
-                    }
-                    index++;
+                    statement?.TryBind(ParamName, "%" + pair.Key + "=" + pair.Value + "%");
 
                     break;
                 }
@@ -4552,10 +4542,7 @@ namespace Emby.Server.Implementations.Data
                 if (enableItemsByName && includedItemByNameTypes.Count == 1)
                 {
                     whereClauses.Add("(TopParentId=@TopParentId or Type=@IncludedItemByNameType)");
-                    if (statement != null)
-                    {
-                        statement.TryBind("@IncludedItemByNameType", includedItemByNameTypes[0]);
-                    }
+                    statement?.TryBind("@IncludedItemByNameType", includedItemByNameTypes[0]);
                 }
                 else if (enableItemsByName && includedItemByNameTypes.Count > 1)
                 {
@@ -4566,10 +4553,8 @@ namespace Emby.Server.Implementations.Data
                 {
                     whereClauses.Add("(TopParentId=@TopParentId)");
                 }
-                if (statement != null)
-                {
-                    statement.TryBind("@TopParentId", queryTopParentIds[0].ToString("N"));
-                }
+
+                statement?.TryBind("@TopParentId", queryTopParentIds[0].ToString("N"));
             }
             else if (queryTopParentIds.Length > 1)
             {
@@ -4901,7 +4886,7 @@ namespace Emby.Server.Implementations.Data
                 {
                     connection.RunInTransaction(db =>
                     {
-                        connection.ExecuteAll(string.Join(";", new string[]
+                        db.ExecuteAll(string.Join(";", new string[]
                         {
                             "delete from itemvalues where type = 6",
 

@@ -403,8 +403,8 @@ namespace Emby.Server.Implementations.SocketSharp
             private string ReadLine()
             {
                 // CRLF or LF are ok as line endings.
-                bool got_cr = false;
-                int b = 0;
+                bool gotCr = false;
+                int b;
                 sb.Length = 0;
                 while (true)
                 {
@@ -419,11 +419,11 @@ namespace Emby.Server.Implementations.SocketSharp
                         break;
                     }
 
-                    got_cr = b == CR;
+                    gotCr = b == CR;
                     sb.Append((char)b);
                 }
 
-                if (got_cr)
+                if (gotCr)
                 {
                     sb.Length--;
                 }

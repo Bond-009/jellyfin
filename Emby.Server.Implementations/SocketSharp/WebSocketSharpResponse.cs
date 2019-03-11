@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -8,7 +7,6 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using IRequest = MediaBrowser.Model.Services.IRequest;
 
 namespace Emby.Server.Implementations.SocketSharp
 {

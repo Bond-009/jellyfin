@@ -19,7 +19,6 @@ using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Providers;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Providers.Music;
-using MediaBrowser.Providers.TV;
 using MediaBrowser.Providers.TV.FanArt;
 
 namespace MediaBrowser.Providers.Movies

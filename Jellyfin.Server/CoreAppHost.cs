@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Emby.Server.Implementations;
-using Emby.Server.Implementations.HttpServer;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.System;
 using Microsoft.Extensions.Configuration;
