@@ -650,18 +650,9 @@ namespace Emby.Server.Implementations.HttpServer
                     Scheme = "https"
                 };
                 url = builder.Uri.ToString();
-
-                RedirectToUrl(httpRes, url);
             }
-            else
-            {
-                // TODO what is this?
-                var httpsUrl = url
-                    .Replace("http://", "https://", StringComparison.OrdinalIgnoreCase)
-                    .Replace(":" + _config.Configuration.PublicPort.ToString(CultureInfo.InvariantCulture), ":" + _config.Configuration.PublicHttpsPort.ToString(CultureInfo.InvariantCulture), StringComparison.OrdinalIgnoreCase);
 
-                RedirectToUrl(httpRes, url);
-            }
+            RedirectToUrl(httpRes, url);
         }
 
         public static void RedirectToUrl(IResponse httpRes, string url)

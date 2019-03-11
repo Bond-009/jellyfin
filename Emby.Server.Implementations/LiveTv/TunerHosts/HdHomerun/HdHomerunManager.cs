@@ -167,8 +167,10 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
                 await tcpClient.SendToAsync(lockkeyMsg, 0, lockkeyMsg.Length, ipEndPoint, cancellationToken).ConfigureAwait(false);
                 var response = await tcpClient.ReceiveAsync(receiveBuffer, 0, receiveBuffer.Length, cancellationToken).ConfigureAwait(false);
                 // parse response to make sure it worked
-                if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out var returnVal))
+                if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out _))
+                {
                     continue;
+                }
 
                 var commandList = commands.GetCommands();
                 foreach (Tuple<string, string> command in commandList)
@@ -177,7 +179,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
                     await tcpClient.SendToAsync(channelMsg, 0, channelMsg.Length, ipEndPoint, cancellationToken).ConfigureAwait(false);
                     response = await tcpClient.ReceiveAsync(receiveBuffer, 0, receiveBuffer.Length, cancellationToken).ConfigureAwait(false);
                     // parse response to make sure it worked
-                    if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out returnVal))
+                    if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out _))
                     {
                         await ReleaseLockkey(tcpClient, lockKeyValue).ConfigureAwait(false);
                         continue;
@@ -191,7 +193,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
                 await tcpClient.SendToAsync(targetMsg, 0, targetMsg.Length, ipEndPoint, cancellationToken).ConfigureAwait(false);
                 response = await tcpClient.ReceiveAsync(receiveBuffer, 0, receiveBuffer.Length, cancellationToken).ConfigureAwait(false);
                 // parse response to make sure it worked
-                if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out returnVal))
+                if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out _))
                 {
                     await ReleaseLockkey(tcpClient, lockKeyValue).ConfigureAwait(false);
                     continue;
@@ -220,7 +222,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
                     await tcpClient.SendToAsync(channelMsg, 0, channelMsg.Length, new IpEndPointInfo(_remoteIp, HdHomeRunPort), cancellationToken).ConfigureAwait(false);
                     var response = await tcpClient.ReceiveAsync(receiveBuffer, 0, receiveBuffer.Length, cancellationToken).ConfigureAwait(false);
                     // parse response to make sure it worked
-                    if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out string returnVal))
+                    if (!ParseReturnMessage(response.Buffer, response.ReceivedBytes, out _))
                     {
                         return;
                     }
@@ -359,7 +361,9 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
             returnVal = string.Empty;
 
             if (numBytes < 4)
+            {
                 return false;
+            }
 
             var flipEndian = BitConverter.IsLittleEndian;
             int offset = 0;
@@ -367,26 +371,34 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
             Buffer.BlockCopy(buf, offset, msgTypeBytes, 0, msgTypeBytes.Length);
 
             if (flipEndian)
+            {
                 Array.Reverse(msgTypeBytes);
+            }
 
             var msgType = BitConverter.ToUInt16(msgTypeBytes, 0);
             offset += 2;
 
             if (msgType != GetSetReply)
+            {
                 return false;
+            }
 
             byte[] msgLengthBytes = new byte[2];
             Buffer.BlockCopy(buf, offset, msgLengthBytes, 0, msgLengthBytes.Length);
             if (flipEndian)
+            {
                 Array.Reverse(msgLengthBytes);
+            }
 
             var msgLength = BitConverter.ToUInt16(msgLengthBytes, 0);
             offset += 2;
 
             if (numBytes < msgLength + 8)
+            {
                 return false;
+            }
 
-            var nameTag = buf[offset];
+            // nameTag
             offset++;
 
             var nameLength = buf[offset];
@@ -395,7 +407,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
             // skip the name field to get to value for return
             offset += nameLength;
 
-            var valueTag = buf[offset];
+            // valueTag
             offset++;
 
             var valueLength = buf[offset];
@@ -477,7 +489,9 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
             {
                 var hash = 0xffffffff;
                 for (var i = 0; i < numBytes; i++)
+                {
                     hash = (hash >> 8) ^ crc_table[(hash ^ bytes[i]) & 0xff];
+                }
 
                 var tmp = ~hash & 0xffffffff;
                 var b0 = tmp & 0xff;

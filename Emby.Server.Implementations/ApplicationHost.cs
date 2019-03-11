@@ -34,7 +34,6 @@ using Emby.Server.Implementations.IO;
 using Emby.Server.Implementations.Library;
 using Emby.Server.Implementations.LiveTv;
 using Emby.Server.Implementations.Localization;
-using Emby.Server.Implementations.Middleware;
 using Emby.Server.Implementations.Net;
 using Emby.Server.Implementations.Playlists;
 using Emby.Server.Implementations.Reflection;
@@ -113,8 +112,8 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using ServiceStack;
+using OperatingSystem = MediaBrowser.Model.System.OperatingSystem;
 
 namespace Emby.Server.Implementations
 {
@@ -143,17 +142,14 @@ namespace Emby.Server.Implementations
                     return false;
                 }
 
-                if (EnvironmentInfo.OperatingSystem == MediaBrowser.Model.System.OperatingSystem.Windows)
+                switch (EnvironmentInfo.OperatingSystem)
                 {
-                    return true;
+                    case OperatingSystem.Windows:
+                    case OperatingSystem.OSX:
+                        return true;
+                    default:
+                        return false;
                 }
-
-                if (EnvironmentInfo.OperatingSystem == MediaBrowser.Model.System.OperatingSystem.OSX)
-                {
-                    return true;
-                }
-
-                return false;
             }
         }
 
@@ -231,7 +227,7 @@ namespace Emby.Server.Implementations
             }
         }
 
-        protected IServiceProvider _serviceProvider;
+        protected IServiceProvider ServiceProvider;
 
         /// <summary>
         /// Gets the server configuration manager.
@@ -456,7 +452,7 @@ namespace Emby.Server.Implementations
         /// <param name="type">The type.</param>
         /// <returns>System.Object.</returns>
         public object CreateInstance(Type type)
-            => ActivatorUtilities.CreateInstance(_serviceProvider, type);
+            => ActivatorUtilities.CreateInstance(ServiceProvider, type);
 
         /// <summary>
         /// Creates an instance of type and resolves all constructor dependencies
@@ -464,7 +460,7 @@ namespace Emby.Server.Implementations
         /// <param name="type">The type.</param>
         /// <returns>System.Object.</returns>
         public T CreateInstance<T>()
-            => ActivatorUtilities.CreateInstance<T>(_serviceProvider);
+            => ActivatorUtilities.CreateInstance<T>(ServiceProvider);
 
         /// <summary>
         /// Creates the instance safe.
@@ -476,7 +472,7 @@ namespace Emby.Server.Implementations
             try
             {
                 Logger.LogDebug("Creating instance of {Type}", type);
-                return ActivatorUtilities.CreateInstance(_serviceProvider, type);
+                return ActivatorUtilities.CreateInstance(ServiceProvider, type);
             }
             catch (Exception ex)
             {
@@ -490,7 +486,7 @@ namespace Emby.Server.Implementations
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>``0.</returns>
-        public T Resolve<T>() => _serviceProvider.GetService<T>();
+        public T Resolve<T>() => ServiceProvider.GetService<T>();
 
         /// <summary>
         /// Gets the export types.
@@ -541,15 +537,6 @@ namespace Emby.Server.Implementations
             ConfigurationManager.ConfigurationUpdated += OnConfigurationUpdated;
 
             MediaEncoder.SetFFmpegPath();
-
-            //if (string.IsNullOrWhiteSpace(MediaEncoder.EncoderPath))
-            //{
-            //    if (ServerConfigurationManager.Configuration.IsStartupWizardCompleted)
-            //    {
-            //        ServerConfigurationManager.Configuration.IsStartupWizardCompleted = false;
-            //        ServerConfigurationManager.SaveConfiguration();
-            //    }
-            //}
 
             Logger.LogInformation("ServerId: {0}", SystemId);
 
@@ -604,7 +591,7 @@ namespace Emby.Server.Implementations
 
                 foreach (var plugin in Plugins)
                 {
-                    pluginBuilder.AppendLine(string.Format("{0} {1}", plugin.Name, plugin.Version));
+                    pluginBuilder.AppendLine($"{plugin.Name} {plugin.Version}");
                 }
 
                 Logger.LogInformation("Plugins: {plugins}", pluginBuilder.ToString());
@@ -902,7 +889,7 @@ namespace Emby.Server.Implementations
             ItemRepository.Initialize(userDataRepo, UserManager);
             ((LibraryManager)LibraryManager).ItemRepository = ItemRepository;
 
-            _serviceProvider = serviceCollection.BuildServiceProvider();
+            ServiceProvider = serviceCollection.BuildServiceProvider();
         }
 
         public virtual string PackageRuntime => "netcore";
@@ -1242,9 +1229,9 @@ namespace Emby.Server.Implementations
                 requiresRestart = true;
             }
 
-            var currentCertPath = CertificateInfo == null ? null : CertificateInfo.Path;
+            var currentCertPath = CertificateInfo?.Path;
             var newCertInfo = GetCertificateInfo(false);
-            var newCertPath = newCertInfo == null ? null : newCertInfo.Path;
+            var newCertPath = newCertInfo?.Path;
 
             if (!string.Equals(currentCertPath, newCertPath, StringComparison.OrdinalIgnoreCase))
             {

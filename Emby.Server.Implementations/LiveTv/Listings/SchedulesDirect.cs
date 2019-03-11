@@ -105,7 +105,6 @@ namespace Emby.Server.Implementations.LiveTv.Listings
             httpOptions.RequestHeaders["token"] = token;
 
             using (var response = await Post(httpOptions, true, info).ConfigureAwait(false))
-            using (var reader = new StreamReader(response.Content))
             {
                 var dailySchedules = await _jsonSerializer.DeserializeFromStreamAsync<List<ScheduleDirect.Day>>(response.Content).ConfigureAwait(false);
                 _logger.LogDebug("Found {ScheduleCount} programs on {ChannelID} ScheduleDirect", dailySchedules.Count, channelId);
@@ -126,7 +125,6 @@ namespace Emby.Server.Implementations.LiveTv.Listings
                 httpOptions.RequestContent = "[\"" + string.Join("\", \"", programsID) + "\"]";
 
                 using (var innerResponse = await Post(httpOptions, true, info).ConfigureAwait(false))
-                using (var innerReader = new StreamReader(innerResponse.Content))
                 {
                     var programDetails = await _jsonSerializer.DeserializeFromStreamAsync<List<ScheduleDirect.ProgramDetails>>(innerResponse.Content).ConfigureAwait(false);
                     var programDict = programDetails.ToDictionary(p => p.programID, y => y);
@@ -758,7 +756,7 @@ namespace Emby.Server.Implementations.LiveTv.Listings
 
             httpOptions.RequestHeaders["token"] = token;
 
-            using (var response = await _httpClient.SendAsync(httpOptions, "PUT"))
+            using (_ = await _httpClient.SendAsync(httpOptions, "PUT"))
             {
             }
         }

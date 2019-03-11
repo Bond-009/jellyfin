@@ -160,7 +160,7 @@ namespace Emby.Server.Implementations.SocketSharp
         }
 
         internal static bool IsInvalidString(string val)
-            => IsInvalidString(val, out var validationFailureIndex);
+            => IsInvalidString(val, out _);
 
         internal static bool IsInvalidString(string val, out int validationFailureIndex)
         {

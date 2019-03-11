@@ -428,7 +428,7 @@ namespace Emby.Server.Implementations.Library
                 ItemRepository.DeleteItem(child.Id, CancellationToken.None);
             }
 
-            _libraryItemsCache.TryRemove(item.Id, out BaseItem removed);
+            _libraryItemsCache.TryRemove(item.Id, out _);
 
             ReportItemRemoved(item, parent);
         }
@@ -1027,9 +1027,6 @@ namespace Emby.Server.Implementations.Library
 
         private async Task ValidateTopLibraryFolders(CancellationToken cancellationToken)
         {
-            var rootChildren = RootFolder.Children.ToList();
-            rootChildren = GetUserRootFolder().Children.ToList();
-
             await RootFolder.RefreshMetadata(cancellationToken).ConfigureAwait(false);
 
             // Start by just validating the children of the root, but go no further

@@ -151,7 +151,6 @@ namespace Emby.Server.Implementations.LiveTv
         private void EmbyTv_TimerCreated(object sender, GenericEventArgs<TimerInfo> e)
         {
             var timer = e.Argument;
-            var service = sender as ILiveTvService;
 
             TimerCreated?.Invoke(this, new GenericEventArgs<TimerEventInfo>
             {
@@ -965,9 +964,6 @@ namespace Emby.Server.Implementations.LiveTv
 
         private async Task AddRecordingInfo(IEnumerable<Tuple<BaseItemDto, string, string>> programs, CancellationToken cancellationToken)
         {
-            var timers = new Dictionary<string, List<TimerInfo>>();
-            var seriesTimers = new Dictionary<string, List<SeriesTimerInfo>>();
-
             TimerInfo[] timerList = null;
             SeriesTimerInfo[] seriesTimerList = null;
 
@@ -1596,8 +1592,6 @@ namespace Emby.Server.Implementations.LiveTv
 
             if (!string.IsNullOrEmpty(query.Id))
             {
-                var guid = new Guid(query.Id);
-
                 timers = timers
                     .Where(i => string.Equals(_tvDtoService.GetInternalTimerId(i.Item1.Id), query.Id, StringComparison.OrdinalIgnoreCase));
             }

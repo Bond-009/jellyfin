@@ -419,7 +419,6 @@ namespace Emby.Server.Implementations.EntryPoints
                     continue;
                 }
 
-                var collectionFolders = _libraryManager.GetCollectionFolders(item, allUserRootChildren);
                 foreach (var folder in allUserRootChildren)
                 {
                     list.Add(folder.Id.ToString("N"));

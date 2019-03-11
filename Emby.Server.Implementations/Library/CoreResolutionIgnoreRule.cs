@@ -70,13 +70,12 @@ namespace Emby.Server.Implementations.Library
             }
 
             var filename = fileInfo.Name;
-            var path = fileInfo.FullName;
 
             // Handle mac .DS_Store
             // https://github.com/MediaBrowser/MediaBrowser/issues/427
             if (_ignoreDotPrefix)
             {
-                if (filename.IndexOf('.') == 0)
+                if (filename[0] == '.')
                 {
                     return true;
                 }

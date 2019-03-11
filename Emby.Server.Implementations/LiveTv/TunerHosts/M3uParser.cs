@@ -156,11 +156,10 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
 
             string numberString = null;
             string attributeValue;
-            double doubleValue;
 
             if (attributes.TryGetValue("tvg-chno", out attributeValue))
             {
-                if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out doubleValue))
+                if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                 {
                     numberString = attributeValue;
                 }
@@ -170,20 +169,20 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
             {
                 if (attributes.TryGetValue("tvg-id", out attributeValue))
                 {
-                    if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out doubleValue))
+                    if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                     {
                         numberString = attributeValue;
                     }
                     else if (attributes.TryGetValue("channel-id", out attributeValue))
                     {
-                        if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out doubleValue))
+                        if (double.TryParse(attributeValue, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                         {
                             numberString = attributeValue;
                         }
                     }
                 }
 
-                if (String.IsNullOrWhiteSpace(numberString))
+                if (string.IsNullOrWhiteSpace(numberString))
                 {
                     // Using this as a fallback now as this leads to Problems with channels like "5 USA"
                     // where 5 isnt ment to be the channel number
@@ -197,7 +196,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
                         {
                             var numberPart = nameInExtInf.Substring(0, numberIndex).Trim(new[] { ' ', '.' });
 
-                            if (double.TryParse(numberPart, NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                            if (double.TryParse(numberPart, NumberStyles.Any, CultureInfo.InvariantCulture, out _))
                             {
                                 numberString = numberPart;
                             }

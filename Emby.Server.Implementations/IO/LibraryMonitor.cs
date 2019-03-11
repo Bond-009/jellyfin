@@ -97,12 +97,12 @@ namespace Emby.Server.Implementations.IO
                 throw new ArgumentNullException(nameof(path));
             }
 
-            // This is an arbitraty amount of time, but delay it because file system writes often trigger events long after the file was actually written to.
+            // This is an arbitrary amount of time, but delay it because file system writes often trigger events long after the file was actually written to.
             // Seeing long delays in some situations, especially over the network, sometimes up to 45 seconds
             // But if we make this delay too high, we risk missing legitimate changes, such as user adding a new file, or hand-editing metadata
             await Task.Delay(45000).ConfigureAwait(false);
 
-            _tempIgnoredPaths.TryRemove(path, out var val);
+            _tempIgnoredPaths.TryRemove(path, out _);
 
             if (refreshPath)
             {
@@ -394,7 +394,7 @@ namespace Emby.Server.Implementations.IO
         /// <param name="watcher">The watcher.</param>
         private void RemoveWatcherFromList(FileSystemWatcher watcher)
         {
-            _fileSystemWatchers.TryRemove(watcher.Path, out var removed);
+            _fileSystemWatchers.TryRemove(watcher.Path, out _);
         }
 
         /// <summary>

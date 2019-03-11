@@ -829,35 +829,33 @@ namespace Emby.Server.Implementations.Networking.IPNetwork
 
         private static void InternalToCidr(bool tryParse, IPAddress netmask, out byte? cidr)
         {
-
             if (netmask == null)
             {
                 if (tryParse == false)
                 {
                     throw new ArgumentNullException(nameof(netmask));
                 }
+
                 cidr = null;
                 return;
             }
 
-            bool parsed = IPNetwork.TryToBigInteger(netmask, out var uintNetmask2);
+            bool parsed = TryToBigInteger(netmask, out var uintNetmask2);
+            if (!parsed)
+            {
+                if (tryParse == false)
+                {
+                    throw new ArgumentException("netmask");
+                }
 
-            /// 20180217 lduchosal
-            /// impossible to reach code.
-            /// if (parsed == false) {
-            ///     if (tryParse == false) {
-            ///         throw new ArgumentException("netmask");
-            ///     }
-            ///     cidr = null;
-            ///     return;
-            /// }
+                cidr = null;
+                return;
+            }
+
             var uintNetmask = (BigInteger)uintNetmask2;
 
             IPNetwork.InternalToCidr(tryParse, uintNetmask, netmask.AddressFamily, out var cidr2);
             cidr = cidr2;
-
-            return;
-
         }
 
 
@@ -1847,8 +1845,7 @@ namespace Emby.Server.Implementations.Networking.IPNetwork
                 return false;
             }
 
-            IPAddress netmask = null;
-            if (!IPNetwork.TryToNetmask(b, family, out netmask))
+            if (!TryToNetmask(b, family, out _))
             {
                 cidr = null;
                 return false;

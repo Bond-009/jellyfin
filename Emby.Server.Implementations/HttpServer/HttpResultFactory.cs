@@ -98,7 +98,7 @@ namespace Emby.Server.Implementations.HttpServer
                 responseHeaders = new Dictionary<string, string>();
             }
 
-            if (addCachePrevention && !responseHeaders.TryGetValue(HeaderNames.Expires, out string expires))
+            if (addCachePrevention && !responseHeaders.TryGetValue(HeaderNames.Expires, out _))
             {
                 responseHeaders[HeaderNames.Expires] = "-1";
             }
@@ -125,8 +125,6 @@ namespace Emby.Server.Implementations.HttpServer
             IHasHeaders result;
             if (string.IsNullOrEmpty(compressionType))
             {
-                var contentLength = content.Length;
-
                 if (isHeadRequest)
                 {
                     content = Array.Empty<byte>();
@@ -169,8 +167,6 @@ namespace Emby.Server.Implementations.HttpServer
 
             if (string.IsNullOrEmpty(compressionType))
             {
-                var contentLength = bytes.Length;
-
                 if (isHeadRequest)
                 {
                     bytes = Array.Empty<byte>();
@@ -330,8 +326,6 @@ namespace Emby.Server.Implementations.HttpServer
             responseHeaders[HeaderNames.ContentEncoding] = requestedCompressionType;
 
             responseHeaders[HeaderNames.Vary] = HeaderNames.AcceptEncoding;
-
-            var contentLength = content.Length;
 
             if (isHeadRequest)
             {

@@ -192,9 +192,6 @@ namespace Emby.Server.Implementations.Session
         public void UpdateDeviceName(string sessionId, string deviceName)
         {
             var session = GetSession(sessionId);
-
-            var key = GetSessionKey(session.Client, session.DeviceId);
-
             if (session != null)
             {
                 session.DeviceName = deviceName;
@@ -275,7 +272,7 @@ namespace Emby.Server.Implementations.Session
             {
                 var key = GetSessionKey(session.Client, session.DeviceId);
 
-                _activeConnections.TryRemove(key, out var removed);
+                _activeConnections.TryRemove(key, out _);
 
                 OnSessionEnded(session);
             }
@@ -290,7 +287,7 @@ namespace Emby.Server.Implementations.Session
             {
                 var key = GetSessionKey(session.Client, session.DeviceId);
 
-                _activeConnections.TryRemove(key, out var removed);
+                _activeConnections.TryRemove(key, out _);
 
                 OnSessionEnded(session);
             }

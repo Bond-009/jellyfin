@@ -137,7 +137,7 @@ namespace Emby.Server.Implementations.Services
         public static object CreateRequest(IRequest httpReq, RestPath restPath, Dictionary<string, string> requestParams, object requestDto)
         {
             var pathInfo = !restPath.IsWildCardPath
-                ? GetSanitizedPathInfo(httpReq.PathInfo, out string contentType)
+                ? GetSanitizedPathInfo(httpReq.PathInfo, out _)
                 : httpReq.PathInfo;
 
             return restPath.CreateRequest(pathInfo, requestParams, requestDto);

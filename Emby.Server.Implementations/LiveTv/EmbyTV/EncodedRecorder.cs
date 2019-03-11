@@ -175,8 +175,6 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
                 inputModifier += " -fflags " + string.Join("", flags.ToArray());
             }
 
-            var videoStream = mediaSource.VideoStream;
-
             if (mediaSource.ReadAtNativeFramerate)
             {
                 inputModifier += " -re";
@@ -204,28 +202,12 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
                 inputTempFile,
                 targetFile,
                 videoArgs,
-                GetAudioArgs(mediaSource),
+                "-codec:a:0 copy",
                 subtitleArgs,
                 durationParam,
                 outputParam);
 
             return inputModifier + " " + commandLineArgs;
-        }
-
-        private static string GetAudioArgs(MediaSourceInfo mediaSource)
-        {
-            var mediaStreams = mediaSource.MediaStreams ?? new List<MediaStream>();
-            var inputAudioCodec = mediaStreams.Where(i => i.Type == MediaStreamType.Audio).Select(i => i.Codec).FirstOrDefault() ?? string.Empty;
-
-            return "-codec:a:0 copy";
-
-            //var audioChannels = 2;
-            //var audioStream = mediaStreams.FirstOrDefault(i => i.Type == MediaStreamType.Audio);
-            //if (audioStream != null)
-            //{
-            //    audioChannels = audioStream.Channels ?? audioChannels;
-            //}
-            //return "-codec:a:0 aac -strict experimental -ab 320000";
         }
 
         private static bool EncodeVideo(MediaSourceInfo mediaSource)

@@ -92,7 +92,7 @@ namespace Emby.Server.Implementations.EntryPoints
                 var changes = _changedItems.ToList();
                 _changedItems.Clear();
 
-                var task = SendNotifications(changes, CancellationToken.None);
+                _ = SendNotifications(changes, CancellationToken.None);
 
                 if (UpdateTimer != null)
                 {
