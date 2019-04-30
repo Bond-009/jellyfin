@@ -48,7 +48,6 @@ namespace MediaBrowser.MediaEncoding.Encoder
         protected readonly IServerConfigurationManager ConfigurationManager;
         protected readonly IFileSystem FileSystem;
         protected readonly Func<ISubtitleEncoder> SubtitleEncoder;
-        protected readonly Func<IMediaSourceManager> MediaSourceManager;
         private readonly IProcessFactory _processFactory;
         private readonly int DefaultImageExtractionTimeoutMs;
         private readonly string StartupOptionFFmpegPath;
@@ -58,7 +57,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
         private readonly ILocalizationManager _localization;
 
         public MediaEncoder(
-            ILoggerFactory loggerFactory,
+            ILogger<MediaEncoder> logger,
             IJsonSerializer jsonSerializer,
             string startupOptionsFFmpegPath,
             IServerConfigurationManager configurationManager,
@@ -69,7 +68,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
             int defaultImageExtractionTimeoutMs,
             ILocalizationManager localization)
         {
-            _logger = loggerFactory.CreateLogger(nameof(MediaEncoder));
+            _logger = logger;
             _jsonSerializer = jsonSerializer;
             StartupOptionFFmpegPath = startupOptionsFFmpegPath;
             ConfigurationManager = configurationManager;
@@ -471,7 +470,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "I-frame image extraction failed, will attempt standard way. Input: {arguments}", inputArgument);
+                    _logger.LogError(ex, "I-frame image extraction failed, will attempt standard way. Input: {Arguments}", inputArgument);
                 }
             }
 

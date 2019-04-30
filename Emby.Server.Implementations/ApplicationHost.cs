@@ -864,7 +864,7 @@ namespace Emby.Server.Implementations
             serviceCollection.AddSingleton(ChapterManager);
 
             MediaEncoder = new MediaBrowser.MediaEncoding.Encoder.MediaEncoder(
-                LoggerFactory,
+                LoggerFactory.CreateLogger<MediaBrowser.MediaEncoding.Encoder.MediaEncoder>(),
                 JsonSerializer,
                 StartupOptions.FFmpegPath,
                 ServerConfigurationManager,
