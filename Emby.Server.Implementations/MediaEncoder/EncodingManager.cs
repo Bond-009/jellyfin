@@ -28,12 +28,13 @@ namespace Emby.Server.Implementations.MediaEncoder
 
         public EncodingManager(
             IFileSystem fileSystem,
-            ILoggerFactory loggerFactory,
+            ILogger<EncodingManager> logger,
             IMediaEncoder encoder,
-            IChapterManager chapterManager, ILibraryManager libraryManager)
+            IChapterManager chapterManager,
+            ILibraryManager libraryManager)
         {
             _fileSystem = fileSystem;
-            _logger = loggerFactory.CreateLogger(nameof(EncodingManager));
+            _logger = logger;
             _encoder = encoder;
             _chapterManager = chapterManager;
             _libraryManager = libraryManager;
@@ -184,7 +185,7 @@ namespace Emby.Server.Implementations.MediaEncoder
 
             if (saveChapters && changesMade)
             {
-                _chapterManager.SaveChapters(video.Id.ToString(), chapters);
+                _chapterManager.SaveChapters(video.Id, chapters);
             }
 
             DeleteDeadImages(currentImages, chapters);

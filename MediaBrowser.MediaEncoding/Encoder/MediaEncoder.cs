@@ -446,7 +446,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
             return ExtractImage(inputFiles, container, imageStream, imageStreamIndex, protocol, false, null, null, cancellationToken);
         }
 
-        private async Task<string> ExtractImage(string[] inputFiles, string container, MediaStream videoStream, int? imageStreamIndex, MediaProtocol protocol, bool isAudio,
+        private Task<string> ExtractImage(string[] inputFiles, string container, MediaStream videoStream, int? imageStreamIndex, MediaProtocol protocol, bool isAudio,
             Video3DFormat? threedFormat, TimeSpan? offset, CancellationToken cancellationToken)
         {
             var inputArgument = GetInputArgument(inputFiles, protocol);
@@ -463,7 +463,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
             {
                 try
                 {
-                    return await ExtractImageInternal(inputArgument, container, videoStream, imageStreamIndex, threedFormat, offset, true, cancellationToken).ConfigureAwait(false);
+                    return ExtractImageInternal(inputArgument, container, videoStream, imageStreamIndex, threedFormat, offset, true, cancellationToken);
                 }
                 catch (ArgumentException)
                 {
@@ -475,8 +475,10 @@ namespace MediaBrowser.MediaEncoding.Encoder
                 }
             }
 
-            return await ExtractImageInternal(inputArgument, container, videoStream, imageStreamIndex, threedFormat, offset, false, cancellationToken).ConfigureAwait(false);
+            return ExtractImageInternal(inputArgument, container, videoStream, imageStreamIndex, threedFormat, offset, false, cancellationToken);
         }
+
+        private SemaphoreSlim _tempStuff = new SemaphoreSlim(4, 4);
 
         private async Task<string> ExtractImageInternal(string inputPath, string container, MediaStream videoStream, int? imageStreamIndex, Video3DFormat? threedFormat, TimeSpan? offset, bool useIFrame, CancellationToken cancellationToken)
         {
@@ -565,51 +567,60 @@ namespace MediaBrowser.MediaEncoding.Encoder
                 }
             }
 
-            var process = _processFactory.Create(new ProcessOptions
+            await _tempStuff.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            try
             {
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                FileName = FFmpegPath,
-                Arguments = args,
-                IsHidden = true,
-                ErrorDialog = false,
-                EnableRaisingEvents = true
-            });
+                var process = _processFactory.Create(new ProcessOptions
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    FileName = FFmpegPath,
+                    Arguments = args,
+                    IsHidden = true,
+                    ErrorDialog = false,
+                    EnableRaisingEvents = true
+                });
 
-            _logger.LogDebug("{0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
+                _logger.LogDebug("{0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
-            using (var processWrapper = new ProcessWrapper(process, this, _logger))
+                using (var processWrapper = new ProcessWrapper(process, this, _logger))
+                {
+                    bool ranToCompletion;
+
+                    StartProcess(processWrapper);
+
+                    var timeoutMs = ConfigurationManager.Configuration.ImageExtractionTimeoutMs;
+                    if (timeoutMs <= 0)
+                    {
+                        timeoutMs = DefaultImageExtractionTimeoutMs;
+                    }
+
+                    ranToCompletion = await process.WaitForExitAsync(timeoutMs).ConfigureAwait(false);
+
+                    if (!ranToCompletion)
+                    {
+                        StopProcess(processWrapper, 1000);
+                    }
+
+                    var exitCode = ranToCompletion ? processWrapper.ExitCode ?? 0 : -1;
+                    var file = FileSystem.GetFileInfo(tempExtractPath);
+
+                    if (exitCode == -1 || !file.Exists || file.Length == 0)
+                    {
+                        var msg = string.Format("ffmpeg image extraction failed for {0}", inputPath);
+
+                        _logger.LogError(msg);
+
+                        throw new Exception(msg);
+                    }
+
+                    return tempExtractPath;
+                }
+            }
+            finally
             {
-                bool ranToCompletion;
-
-                StartProcess(processWrapper);
-
-                var timeoutMs = ConfigurationManager.Configuration.ImageExtractionTimeoutMs;
-                if (timeoutMs <= 0)
-                {
-                    timeoutMs = DefaultImageExtractionTimeoutMs;
-                }
-
-                ranToCompletion = await process.WaitForExitAsync(timeoutMs).ConfigureAwait(false);
-
-                if (!ranToCompletion)
-                {
-                    StopProcess(processWrapper, 1000);
-                }
-
-                var exitCode = ranToCompletion ? processWrapper.ExitCode ?? 0 : -1;
-                var file = FileSystem.GetFileInfo(tempExtractPath);
-
-                if (exitCode == -1 || !file.Exists || file.Length == 0)
-                {
-                    var msg = string.Format("ffmpeg image extraction failed for {0}", inputPath);
-
-                    _logger.LogError(msg);
-
-                    throw new Exception(msg);
-                }
-
-                return tempExtractPath;
+                _tempStuff.Release();
             }
         }
 
@@ -625,7 +636,8 @@ namespace MediaBrowser.MediaEncoding.Encoder
             return time.ToString(@"hh\:mm\:ss\.fff", UsCulture);
         }
 
-        public async Task ExtractVideoImagesOnInterval(string[] inputFiles,
+        public async Task ExtractVideoImagesOnInterval(
+            string[] inputFiles,
             string container,
             MediaStream videoStream,
             MediaProtocol protocol,

@@ -860,7 +860,7 @@ namespace Emby.Server.Implementations
             serviceCollection.AddSingleton<IDeviceDiscovery>(
                 new DeviceDiscovery(LoggerFactory, ServerConfigurationManager, SocketFactory));
 
-            ChapterManager = new ChapterManager(LibraryManager, LoggerFactory, ServerConfigurationManager, ItemRepository);
+            ChapterManager = new ChapterManager(ItemRepository);
             serviceCollection.AddSingleton(ChapterManager);
 
             MediaEncoder = new MediaBrowser.MediaEncoding.Encoder.MediaEncoder(
@@ -876,7 +876,7 @@ namespace Emby.Server.Implementations
                 LocalizationManager);
             serviceCollection.AddSingleton(MediaEncoder);
 
-            EncodingManager = new MediaEncoder.EncodingManager(FileSystemManager, LoggerFactory, MediaEncoder, ChapterManager, LibraryManager);
+            EncodingManager = new MediaEncoder.EncodingManager(FileSystemManager, LoggerFactory.CreateLogger<MediaEncoder.EncodingManager>(), MediaEncoder, ChapterManager, LibraryManager);
             serviceCollection.AddSingleton(EncodingManager);
 
             var activityLogRepo = GetActivityLogRepository();
@@ -1441,9 +1441,9 @@ namespace Emby.Server.Implementations
         public async Task<SystemInfo> GetSystemInfo(CancellationToken cancellationToken)
         {
             var localAddress = await GetLocalApiUrl(cancellationToken).ConfigureAwait(false);
-            
-            string wanAddress; 
-            
+
+            string wanAddress;
+
             if (string.IsNullOrEmpty(ServerConfigurationManager.Configuration.WanDdns))
             {
                 wanAddress = await GetWanApiUrlFromExternal(cancellationToken).ConfigureAwait(false);
@@ -1499,10 +1499,10 @@ namespace Emby.Server.Implementations
 
         public async Task<PublicSystemInfo> GetPublicSystemInfo(CancellationToken cancellationToken)
         {
-            var localAddress = await GetLocalApiUrl(cancellationToken).ConfigureAwait(false);            
-            
+            var localAddress = await GetLocalApiUrl(cancellationToken).ConfigureAwait(false);
+
             string wanAddress;
-            
+
             if (string.IsNullOrEmpty(ServerConfigurationManager.Configuration.WanDdns))
             {
                 wanAddress = await GetWanApiUrlFromExternal(cancellationToken).ConfigureAwait(false);
@@ -1618,9 +1618,9 @@ namespace Emby.Server.Implementations
             }
             return string.Format("http://{0}:{1}",
                     host,
-                    ServerConfigurationManager.Configuration.PublicPort.ToString(CultureInfo.InvariantCulture));      
+                    ServerConfigurationManager.Configuration.PublicPort.ToString(CultureInfo.InvariantCulture));
         }
-        
+
         public Task<List<IpAddressInfo>> GetLocalIpAddresses(CancellationToken cancellationToken)
         {
             return GetLocalIpAddressesInternal(true, 0, cancellationToken);

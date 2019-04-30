@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MediaBrowser.Model.Entities;
 
@@ -11,6 +12,6 @@ namespace MediaBrowser.Controller.Chapters
         /// <summary>
         /// Saves the chapters.
         /// </summary>
-        void SaveChapters(string itemId, List<ChapterInfo> chapters);
+        void SaveChapters(Guid itemId, List<ChapterInfo> chapters);
     }
 }
