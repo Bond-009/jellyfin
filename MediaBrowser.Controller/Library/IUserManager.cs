@@ -16,11 +16,19 @@ namespace MediaBrowser.Controller.Library
     /// </summary>
     public interface IUserManager
     {
+        // REVIEW: Possibly make this an ICollection
         /// <summary>
         /// Gets the users.
         /// </summary>
         /// <value>The users.</value>
-        IEnumerable<User> Users { get; }
+        IEnumerable<User> GetUsers();
+
+        // REVIEW: Possibly make this an ICollection
+        /// <summary>
+        /// Gets the users.
+        /// </summary>
+        /// <value>The users.</value>
+        IEnumerable<Guid> GetUsersIds();
 
         /// <summary>
         /// Occurs when [user updated].
@@ -92,7 +100,7 @@ namespace MediaBrowser.Controller.Library
         /// <returns>User.</returns>
         /// <exception cref="ArgumentNullException">name</exception>
         /// <exception cref="ArgumentException"></exception>
-        Task<User> CreateUser(string name);
+        User CreateUser(string name);
 
         /// <summary>
         /// Deletes the user.
@@ -101,7 +109,7 @@ namespace MediaBrowser.Controller.Library
         /// <returns>Task.</returns>
         /// <exception cref="ArgumentNullException">user</exception>
         /// <exception cref="ArgumentException"></exception>
-        Task DeleteUser(User user);
+        void DeleteUser(User user);
 
         /// <summary>
         /// Resets the password.

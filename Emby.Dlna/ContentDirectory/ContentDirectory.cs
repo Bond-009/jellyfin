@@ -124,7 +124,7 @@ namespace Emby.Dlna.ContentDirectory
                 }
             }
 
-            foreach (var user in _userManager.Users)
+            foreach (var user in _userManager.GetUsers())
             {
                 if (user.Policy.IsAdministrator)
                 {
@@ -132,7 +132,7 @@ namespace Emby.Dlna.ContentDirectory
                 }
             }
 
-            foreach (var user in _userManager.Users)
+            foreach (var user in _userManager.GetUsers())
             {
                 return user;
             }

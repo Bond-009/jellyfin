@@ -96,7 +96,7 @@ namespace MediaBrowser.Api
 
         public object Get(GetStartupUser request)
         {
-            var user = _userManager.Users.First();
+            var user = _userManager.GetUsers().First();
 
             return new StartupUser
             {
@@ -107,7 +107,7 @@ namespace MediaBrowser.Api
 
         public async Task Post(UpdateStartupUser request)
         {
-            var user = _userManager.Users.First();
+            var user = _userManager.GetUsers().First();
 
             user.Name = request.Name;
 

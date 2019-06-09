@@ -85,10 +85,10 @@ namespace Emby.Notifications
                 switch (request.SendToUserMode.Value)
                 {
                     case SendToUserType.Admins:
-                        return _userManager.Users.Where(i => i.Policy.IsAdministrator)
+                        return _userManager.GetUsers().Where(i => i.Policy.IsAdministrator)
                                 .Select(i => i.Id);
                     case SendToUserType.All:
-                        return _userManager.Users.Select(i => i.Id);
+                        return _userManager.GetUsersIds();
                     case SendToUserType.Custom:
                         return request.UserIds;
                     default:
@@ -100,7 +100,7 @@ namespace Emby.Notifications
             {
                 var config = GetConfiguration();
 
-                return _userManager.Users
+                return _userManager.GetUsers()
                     .Where(i => config.IsEnabledToSendToUser(request.NotificationType, i.Id.ToString("N"), i.Policy))
                     .Select(i => i.Id);
             }

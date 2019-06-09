@@ -1410,16 +1410,14 @@ namespace Emby.Server.Implementations.Session
             CheckDisposed();
 
             User user = null;
-            if (!request.UserId.Equals(Guid.Empty))
+            if (request.UserId != Guid.Empty)
             {
-                user = _userManager.Users
-                    .FirstOrDefault(i => i.Id == request.UserId);
+                user = _userManager.GetUserById(request.UserId);
             }
 
             if (user == null)
             {
-                user = _userManager.Users
-                    .FirstOrDefault(i => string.Equals(request.Username, i.Name, StringComparison.OrdinalIgnoreCase));
+                user = _userManager.GetUserByName(request.Username);
             }
 
             if (user != null)
@@ -1823,7 +1821,7 @@ namespace Emby.Server.Implementations.Session
         {
             CheckDisposed();
 
-            var adminUserIds = _userManager.Users.Where(i => i.Policy.IsAdministrator).Select(i => i.Id).ToList();
+            var adminUserIds = _userManager.GetUsers().Where(i => i.Policy.IsAdministrator).Select(i => i.Id).ToList();
 
             return SendMessageToUserSessions(adminUserIds, name, data, cancellationToken);
         }

@@ -160,7 +160,7 @@ namespace Emby.Notifications.Api
                 Level = request.Level,
                 Name = request.Name,
                 Url = request.Url,
-                UserIds = _userManager.Users.Where(i => i.Policy.IsAdministrator).Select(i => i.Id).ToArray()
+                UserIds = _userManager.GetUsers().Where(i => i.Policy.IsAdministrator).Select(i => i.Id).ToArray()
             };
 
             return _notificationManager.SendNotification(notification, CancellationToken.None);

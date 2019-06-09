@@ -2190,7 +2190,7 @@ namespace Emby.Server.Implementations.LiveTv
                 IsEnabled = services.Length > 0
             };
 
-            info.EnabledUsers = _userManager.Users
+            info.EnabledUsers = _userManager.GetUsers()
                 .Where(IsLiveTvEnabled)
                 .Select(i => i.Id.ToString("N"))
                 .ToArray();
@@ -2205,7 +2205,7 @@ namespace Emby.Server.Implementations.LiveTv
 
         public IEnumerable<User> GetEnabledUsers()
         {
-            return _userManager.Users
+            return _userManager.GetUsers()
                 .Where(IsLiveTvEnabled);
         }
 

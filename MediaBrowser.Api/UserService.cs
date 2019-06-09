@@ -286,7 +286,7 @@ namespace MediaBrowser.Api
 
         private object Get(GetUsers request, bool filterByDevice, bool filterByNetwork)
         {
-            var users = _userManager.Users;
+            var users = _userManager.GetUsers();
 
             if (request.IsDisabled.HasValue)
             {
@@ -362,8 +362,8 @@ namespace MediaBrowser.Api
             }
 
             _sessionMananger.RevokeUserTokens(user.Id, null);
-
-            return _userManager.DeleteUser(user);
+            _userManager.DeleteUser(user);
+            return Task.CompletedTask; 
         }
 
         /// <summary>
@@ -506,11 +506,11 @@ namespace MediaBrowser.Api
         /// </summary>
         /// <param name="request">The request.</param>
         /// <returns>System.Object.</returns>
-        public async Task<object> Post(CreateUserByName request)
+        public object Post(CreateUserByName request)
         {
             var dtoUser = request;
 
-            var newUser = await _userManager.CreateUser(dtoUser.Name).ConfigureAwait(false);
+            var newUser = _userManager.CreateUser(dtoUser.Name);
 
             var result = _userManager.GetUserDto(newUser, Request.RemoteIp);
 
@@ -553,7 +553,7 @@ namespace MediaBrowser.Api
             // If removing admin access
             if (!request.IsAdministrator && user.Policy.IsAdministrator)
             {
-                if (_userManager.Users.Count(i => i.Policy.IsAdministrator) == 1)
+                if (_userManager.GetUsers().Count(i => i.Policy.IsAdministrator) == 1)
                 {
                     throw new ArgumentException("There must be at least one user in the system with administrative access.");
                 }
@@ -568,7 +568,7 @@ namespace MediaBrowser.Api
             // If disabling
             if (request.IsDisabled && !user.Policy.IsDisabled)
             {
-                if (_userManager.Users.Count(i => !i.Policy.IsDisabled) == 1)
+                if (_userManager.GetUsers().Count(i => !i.Policy.IsDisabled) == 1)
                 {
                     throw new ArgumentException("There must be at least one enabled user in the system.");
                 }

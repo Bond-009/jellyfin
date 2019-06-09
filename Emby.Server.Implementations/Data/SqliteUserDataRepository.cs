@@ -45,7 +45,7 @@ namespace Emby.Server.Implementations.Data
                 var userDatasTableExists = TableExists(connection, "UserDatas");
                 var userDataTableExists = TableExists(connection, "userdata");
 
-                var users = userDatasTableExists ? null : userManager.Users.ToArray();
+                var users = userDatasTableExists ? null : userManager.GetUsers().ToArray();
 
                 connection.RunInTransaction(db =>
                 {
