@@ -9,12 +9,22 @@ namespace Emby.Dlna.MediaReceiverRegistrar
 {
     public class ControlHandler : BaseControlHandler
     {
+        public ControlHandler(IServerConfigurationManager config, ILogger logger)
+            : base(config, logger)
+        {
+        }
+
         protected override IEnumerable<KeyValuePair<string, string>> GetResult(string methodName, IDictionary<string, string> methodParams)
         {
             if (string.Equals(methodName, "IsAuthorized", StringComparison.OrdinalIgnoreCase))
+            {
                 return HandleIsAuthorized();
+            }
+
             if (string.Equals(methodName, "IsValidated", StringComparison.OrdinalIgnoreCase))
+            {
                 return HandleIsValidated();
+            }
 
             throw new ResourceNotFoundException("Unexpected control request name: " + methodName);
         }
@@ -33,11 +43,6 @@ namespace Emby.Dlna.MediaReceiverRegistrar
             {
                 { "Result", "1" }
             };
-        }
-
-        public ControlHandler(IServerConfigurationManager config, ILogger logger)
-            : base(config, logger)
-        {
         }
     }
 }

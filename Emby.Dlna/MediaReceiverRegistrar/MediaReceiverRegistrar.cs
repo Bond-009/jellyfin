@@ -22,10 +22,7 @@ namespace Emby.Dlna.MediaReceiverRegistrar
 
         public ControlResponse ProcessControlRequest(ControlRequest request)
         {
-            return new ControlHandler(
-                _config,
-                Logger)
-                .ProcessControlRequest(request);
+            return new ControlHandler(_config, Logger).ProcessControlRequest(request);
         }
     }
 }

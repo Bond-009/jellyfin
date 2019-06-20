@@ -17,16 +17,28 @@ namespace Emby.Dlna.PlayTo
 {
     public class Device : IDisposable
     {
-        #region Fields & Properties
+        private static readonly CultureInfo _usCulture = CultureInfo.ReadOnly(new CultureInfo("en-US"));
+
+        private readonly ILogger _logger;
+
+        private readonly object _timerLock = new object();
+
+        private readonly SsdpHttpClient _ssdpHttpClient;
 
         private Timer _timer;
+        private int _muteVol;
+        private int _volume;
+        private DateTime _lastVolumeRefresh;
+        private bool _volumeRefreshActive;
+
+        public Device(DeviceInfo deviceProperties, IHttpClient httpClient, ILogger logger, IServerConfigurationManager config)
+        {
+            Properties = deviceProperties;
+            _logger = logger;
+            _ssdpHttpClient = new SsdpHttpClient(httpClient, config);
+        }
 
         public DeviceInfo Properties { get; set; }
-
-        private int _muteVol;
-        public bool IsMuted { get; set; }
-
-        private int _volume;
 
         public int Volume
         {
@@ -37,6 +49,8 @@ namespace Emby.Dlna.PlayTo
             }
             set => _volume = value;
         }
+
+        public bool IsMuted { get; set; }
 
         public TimeSpan? Duration { get; set; }
 
@@ -50,21 +64,17 @@ namespace Emby.Dlna.PlayTo
 
         public bool IsStopped => TransportState == TRANSPORTSTATE.STOPPED;
 
-        #endregion
-
-        private readonly IHttpClient _httpClient;
-        private readonly ILogger _logger;
-        private readonly IServerConfigurationManager _config;
-
         public Action OnDeviceUnavailable { get; set; }
 
-        public Device(DeviceInfo deviceProperties, IHttpClient httpClient, ILogger logger, IServerConfigurationManager config)
-        {
-            Properties = deviceProperties;
-            _httpClient = httpClient;
-            _logger = logger;
-            _config = config;
-        }
+        public uBaseObject CurrentMediaInfo { get; private set; }
+
+        public event EventHandler<PlaybackStartEventArgs> PlaybackStart;
+
+        public event EventHandler<PlaybackProgressEventArgs> PlaybackProgress;
+
+        public event EventHandler<PlaybackStoppedEventArgs> PlaybackStopped;
+
+        public event EventHandler<MediaChangedEventArgs> MediaChanged;
 
         public void Start()
         {
@@ -72,8 +82,6 @@ namespace Emby.Dlna.PlayTo
             _timer = new Timer(TimerCallback, null, 1000, Timeout.Infinite);
         }
 
-        private DateTime _lastVolumeRefresh;
-        private bool _volumeRefreshActive;
         private void RefreshVolumeIfNeeded()
         {
             if (!_volumeRefreshActive)
@@ -84,14 +92,16 @@ namespace Emby.Dlna.PlayTo
             if (DateTime.UtcNow >= _lastVolumeRefresh.AddSeconds(5))
             {
                 _lastVolumeRefresh = DateTime.UtcNow;
-                RefreshVolume(CancellationToken.None);
+                RefreshVolume(CancellationToken.None).GetAwaiter().GetResult();
             }
         }
 
-        private async void RefreshVolume(CancellationToken cancellationToken)
+        private async Task RefreshVolume(CancellationToken cancellationToken)
         {
             if (_disposed)
+            {
                 return;
+            }
 
             try
             {
@@ -104,7 +114,6 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        private readonly object _timerLock = new object();
         private void RestartTimer(bool immediate = false)
         {
             lock (_timerLock)
@@ -209,7 +218,9 @@ namespace Emby.Dlna.PlayTo
 
             var command = rendererCommands.ServiceActions.FirstOrDefault(c => c.Name == "SetMute");
             if (command == null)
+            {
                 return false;
+            }
 
             var service = GetServiceRenderingControl();
 
@@ -221,7 +232,7 @@ namespace Emby.Dlna.PlayTo
             _logger.LogDebug("Setting mute");
             var value = mute ? 1 : 0;
 
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType, value))
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType, value))
                 .ConfigureAwait(false);
 
             IsMuted = mute;
@@ -251,7 +262,7 @@ namespace Emby.Dlna.PlayTo
             // Remote control will perform better
             Volume = value;
 
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType, value))
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType, value))
                 .ConfigureAwait(false);
         }
 
@@ -270,7 +281,7 @@ namespace Emby.Dlna.PlayTo
                 throw new InvalidOperationException("Unable to find service");
             }
 
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, string.Format("{0:hh}:{0:mm}:{0:ss}", value), "REL_TIME"))
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, string.Format("{0:hh}:{0:mm}:{0:ss}", value), "REL_TIME"))
                 .ConfigureAwait(false);
 
             RestartTimer(true);
@@ -302,7 +313,7 @@ namespace Emby.Dlna.PlayTo
             }
 
             var post = avCommands.BuildPost(command, service.ServiceType, url, dictionary);
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, post, header: header)
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, post, header: header)
                 .ConfigureAwait(false);
 
             await Task.Delay(50).ConfigureAwait(false);
@@ -344,7 +355,7 @@ namespace Emby.Dlna.PlayTo
                 throw new InvalidOperationException("Unable to find service");
             }
 
-            return new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1));
+            return _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1));
         }
 
         public async Task SetPlay(CancellationToken cancellationToken)
@@ -368,7 +379,7 @@ namespace Emby.Dlna.PlayTo
 
             var service = GetAvTransportService();
 
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1))
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1))
                 .ConfigureAwait(false);
 
             RestartTimer(true);
@@ -386,7 +397,7 @@ namespace Emby.Dlna.PlayTo
 
             var service = GetAvTransportService();
 
-            await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1))
+            await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType, 1))
                 .ConfigureAwait(false);
 
             TransportState = TRANSPORTSTATE.PAUSED;
@@ -513,7 +524,7 @@ namespace Emby.Dlna.PlayTo
                 return;
             }
 
-            var result = await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), true)
+            var result = await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), true)
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
@@ -529,7 +540,7 @@ namespace Emby.Dlna.PlayTo
                 return;
             }
 
-            Volume = int.Parse(volumeValue, UsCulture);
+            Volume = int.Parse(volumeValue, _usCulture);
 
             if (Volume > 0)
             {
@@ -559,7 +570,7 @@ namespace Emby.Dlna.PlayTo
                 return;
             }
 
-            var result = await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), true)
+            var result = await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), true)
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
@@ -586,7 +597,7 @@ namespace Emby.Dlna.PlayTo
                 return null;
             }
 
-            var result = await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType), false)
+            var result = await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, avCommands.BuildPost(command, service.ServiceType), false)
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
@@ -624,7 +635,7 @@ namespace Emby.Dlna.PlayTo
 
             var rendererCommands = await GetRenderingProtocolAsync(cancellationToken).ConfigureAwait(false);
 
-            var result = await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), false)
+            var result = await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), false)
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
@@ -687,7 +698,7 @@ namespace Emby.Dlna.PlayTo
 
             var rendererCommands = await GetRenderingProtocolAsync(cancellationToken).ConfigureAwait(false);
 
-            var result = await new SsdpHttpClient(_httpClient, _config).SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), false)
+            var result = await _ssdpHttpClient.SendCommandAsync(Properties.BaseUrl, service, command.Name, rendererCommands.BuildPost(command, service.ServiceType), false)
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
@@ -704,7 +715,7 @@ namespace Emby.Dlna.PlayTo
             if (!string.IsNullOrWhiteSpace(duration)
                 && !string.Equals(duration, "NOT_IMPLEMENTED", StringComparison.OrdinalIgnoreCase))
             {
-                Duration = TimeSpan.Parse(duration, UsCulture);
+                Duration = TimeSpan.Parse(duration, _usCulture);
             }
             else
             {
@@ -716,7 +727,7 @@ namespace Emby.Dlna.PlayTo
 
             if (!string.IsNullOrWhiteSpace(position) && !string.Equals(position, "NOT_IMPLEMENTED", StringComparison.OrdinalIgnoreCase))
             {
-                Position = TimeSpan.Parse(position, UsCulture);
+                Position = TimeSpan.Parse(position, _usCulture);
             }
 
             var track = result.Document.Descendants("TrackMetaData").FirstOrDefault();
@@ -868,9 +879,7 @@ namespace Emby.Dlna.PlayTo
 
             string url = NormalizeUrl(Properties.BaseUrl, avService.ScpdUrl);
 
-            var httpClient = new SsdpHttpClient(_httpClient, _config);
-
-            var document = await httpClient.GetDataAsync(url, cancellationToken).ConfigureAwait(false);
+            var document = await _ssdpHttpClient.GetDataAsync(url, cancellationToken).ConfigureAwait(false);
 
             AvCommands = TransportCommands.Create(document);
             return AvCommands;
@@ -896,9 +905,8 @@ namespace Emby.Dlna.PlayTo
 
             string url = NormalizeUrl(Properties.BaseUrl, avService.ScpdUrl);
 
-            var httpClient = new SsdpHttpClient(_httpClient, _config);
             _logger.LogDebug("Dlna Device.GetRenderingProtocolAsync");
-            var document = await httpClient.GetDataAsync(url, cancellationToken).ConfigureAwait(false);
+            var document = await _ssdpHttpClient.GetDataAsync(url, cancellationToken).ConfigureAwait(false);
 
             RendererCommands = TransportCommands.Create(document);
             return RendererCommands;
@@ -1044,7 +1052,6 @@ namespace Emby.Dlna.PlayTo
 
         #endregion
 
-        private static readonly CultureInfo UsCulture = new CultureInfo("en-US");
         private static DeviceIcon CreateIcon(XElement element)
         {
             if (element == null)
@@ -1058,8 +1065,8 @@ namespace Emby.Dlna.PlayTo
             var depth = element.GetDescendantValue(uPnpNamespaces.ud.GetName("depth"));
             var url = element.GetDescendantValue(uPnpNamespaces.ud.GetName("url"));
 
-            var widthValue = int.Parse(width, NumberStyles.Integer, UsCulture);
-            var heightValue = int.Parse(height, NumberStyles.Integer, UsCulture);
+            var widthValue = int.Parse(width, NumberStyles.Integer, _usCulture);
+            var heightValue = int.Parse(height, NumberStyles.Integer, _usCulture);
 
             return new DeviceIcon
             {
@@ -1089,13 +1096,6 @@ namespace Emby.Dlna.PlayTo
             };
         }
 
-        public event EventHandler<PlaybackStartEventArgs> PlaybackStart;
-        public event EventHandler<PlaybackProgressEventArgs> PlaybackProgress;
-        public event EventHandler<PlaybackStoppedEventArgs> PlaybackStopped;
-        public event EventHandler<MediaChangedEventArgs> MediaChanged;
-
-        public uBaseObject CurrentMediaInfo { get; private set; }
-
         private void UpdateMediaInfo(uBaseObject mediaInfo, TRANSPORTSTATE state)
         {
             TransportState = state;
@@ -1105,66 +1105,39 @@ namespace Emby.Dlna.PlayTo
 
             if (previousMediaInfo == null && mediaInfo != null)
             {
-                if (state != TRANSPORTSTATE.STOPPED)
+                if (state != TRANSPORTSTATE.STOPPED && !string.IsNullOrWhiteSpace(mediaInfo.Url))
                 {
-                    OnPlaybackStart(mediaInfo);
+                    PlaybackStart?.Invoke(this, new PlaybackStartEventArgs
+                    {
+                        MediaInfo = mediaInfo
+                    });
                 }
             }
             else if (mediaInfo != null && previousMediaInfo != null && !mediaInfo.Equals(previousMediaInfo))
             {
-                OnMediaChanged(previousMediaInfo, mediaInfo);
+                MediaChanged?.Invoke(this, new MediaChangedEventArgs
+                {
+                    OldMediaInfo = previousMediaInfo,
+                    NewMediaInfo = mediaInfo
+                });
             }
             else if (mediaInfo == null && previousMediaInfo != null)
             {
-                OnPlaybackStop(previousMediaInfo);
+                PlaybackStopped?.Invoke(this, new PlaybackStoppedEventArgs
+                {
+                    MediaInfo = mediaInfo
+                });
             }
             else if (mediaInfo != null && mediaInfo.Equals(previousMediaInfo))
             {
-                OnPlaybackProgress(mediaInfo);
+                if (!string.IsNullOrWhiteSpace(mediaInfo.Url))
+                {
+                    PlaybackProgress?.Invoke(this, new PlaybackProgressEventArgs
+                    {
+                        MediaInfo = mediaInfo
+                    });
+                }
             }
-        }
-
-        private void OnPlaybackStart(uBaseObject mediaInfo)
-        {
-            if (string.IsNullOrWhiteSpace(mediaInfo.Url))
-            {
-                return;
-            }
-
-            PlaybackStart?.Invoke(this, new PlaybackStartEventArgs
-            {
-                MediaInfo = mediaInfo
-            });
-        }
-
-        private void OnPlaybackProgress(uBaseObject mediaInfo)
-        {
-            if (string.IsNullOrWhiteSpace(mediaInfo.Url))
-            {
-                return;
-            }
-
-            PlaybackProgress?.Invoke(this, new PlaybackProgressEventArgs
-            {
-                MediaInfo = mediaInfo
-            });
-        }
-
-        private void OnPlaybackStop(uBaseObject mediaInfo)
-        {
-            PlaybackStopped?.Invoke(this, new PlaybackStoppedEventArgs
-            {
-                MediaInfo = mediaInfo
-            });
-        }
-
-        private void OnMediaChanged(uBaseObject old, uBaseObject newMedia)
-        {
-            MediaChanged?.Invoke(this, new MediaChangedEventArgs
-            {
-                OldMediaInfo = old,
-                NewMediaInfo = newMedia
-            });
         }
 
         #region IDisposable
@@ -1198,8 +1171,6 @@ namespace Emby.Dlna.PlayTo
         #endregion
 
         public override string ToString()
-        {
-            return string.Format("{0} - {1}", Properties.Name, Properties.BaseUrl);
-        }
+            => string.Format(CultureInfo.InvariantCulture, "{0} - {1}", Properties.Name, Properties.BaseUrl);
     }
 }

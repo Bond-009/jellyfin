@@ -24,7 +24,6 @@ namespace Emby.Dlna.PlayTo
     {
         private readonly ILogger _logger;
         private readonly ISessionManager _sessionManager;
-
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly IDlnaManager _dlnaManager;
@@ -34,7 +33,6 @@ namespace Emby.Dlna.PlayTo
         private readonly IServerConfigurationManager _config;
         private readonly IUserDataManager _userDataManager;
         private readonly ILocalizationManager _localization;
-
         private readonly IDeviceDiscovery _deviceDiscovery;
         private readonly IMediaSourceManager _mediaSourceManager;
         private readonly IMediaEncoder _mediaEncoder;
@@ -63,10 +61,10 @@ namespace Emby.Dlna.PlayTo
 
         public void Start()
         {
-            _deviceDiscovery.DeviceDiscovered += _deviceDiscovery_DeviceDiscovered;
+            _deviceDiscovery.DeviceDiscovered += OnDeviceDiscoveryDeviceDiscovered;
         }
 
-        async void _deviceDiscovery_DeviceDiscovered(object sender, GenericEventArgs<UpnpDeviceInfo> e)
+        private async void OnDeviceDiscoveryDeviceDiscovered(object sender, GenericEventArgs<UpnpDeviceInfo> e)
         {
             if (_disposed)
             {
@@ -75,15 +73,21 @@ namespace Emby.Dlna.PlayTo
 
             var info = e.Argument;
 
-            if (!info.Headers.TryGetValue("USN", out string usn)) usn = string.Empty;
+            if (!info.Headers.TryGetValue("USN", out string usn))
+            {
+                usn = string.Empty;
+            }
 
-            if (!info.Headers.TryGetValue("NT", out string nt)) nt = string.Empty;
+            if (!info.Headers.TryGetValue("NT", out string nt))
+            {
+                nt = string.Empty;
+            }
 
             string location = info.Location.ToString();
 
             // It has to report that it's a media renderer
-            if (usn.IndexOf("MediaRenderer:", StringComparison.OrdinalIgnoreCase) == -1 &&
-                     nt.IndexOf("MediaRenderer:", StringComparison.OrdinalIgnoreCase) == -1)
+            if (usn.IndexOf("MediaRenderer:", StringComparison.OrdinalIgnoreCase) == -1
+                && nt.IndexOf("MediaRenderer:", StringComparison.OrdinalIgnoreCase) == -1)
             {
                 //_logger.LogDebug("Upnp device {0} does not contain a MediaRenderer device (0).", location);
                 return;
@@ -130,6 +134,7 @@ namespace Emby.Dlna.PlayTo
                 usn = usn.Substring(index);
                 found = true;
             }
+
             index = usn.IndexOf("::", StringComparison.OrdinalIgnoreCase);
             if (index != -1)
             {
@@ -230,16 +235,28 @@ namespace Emby.Dlna.PlayTo
 
         public void Dispose()
         {
-            _deviceDiscovery.DeviceDiscovered -= _deviceDiscovery_DeviceDiscovered;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            try
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
             {
-                _disposeCancellationTokenSource.Cancel();
+                return;
             }
-            catch
-            {
 
+            _deviceDiscovery.DeviceDiscovered -= OnDeviceDiscoveryDeviceDiscovered;
+            _disposeCancellationTokenSource.Cancel();
+
+            if (disposing)
+            {
+                _sessionLock.Dispose();
+                _disposeCancellationTokenSource.Dispose();
             }
+
+            _sessionLock = null;
+            _disposeCancellationTokenSource = null;
 
             _disposed = true;
         }

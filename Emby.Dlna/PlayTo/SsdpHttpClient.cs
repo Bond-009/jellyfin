@@ -16,6 +16,8 @@ namespace Emby.Dlna.PlayTo
         private const string USERAGENT = "Microsoft-Windows/6.2 UPnP/1.0 Microsoft-DLNA DLNADOC/1.50";
         private const string FriendlyName = "Jellyfin";
 
+        private static readonly CultureInfo _usCulture = CultureInfo.ReadOnly(new CultureInfo("en-US"));
+
         private readonly IHttpClient _httpClient;
         private readonly IServerConfigurationManager _config;
 
@@ -25,7 +27,8 @@ namespace Emby.Dlna.PlayTo
             _config = config;
         }
 
-        public async Task<XDocument> SendCommandAsync(string baseUrl,
+        public async Task<XDocument> SendCommandAsync(
+            string baseUrl,
             DeviceService service,
             string command,
             string postData,
@@ -36,14 +39,11 @@ namespace Emby.Dlna.PlayTo
 
             using (var response = await PostSoapDataAsync(NormalizeServiceUrl(baseUrl, service.ControlUrl), "\"" + service.ServiceType + "#" + command + "\"", postData, header, logRequest, cancellationToken)
                 .ConfigureAwait(false))
+            using (var stream = response.Content)
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
-                using (var stream = response.Content)
-                {
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        return XDocument.Parse(reader.ReadToEnd(), LoadOptions.PreserveWhitespace);
-                    }
-                }
+                string text = await reader.ReadToEndAsync().ConfigureAwait(false);
+                return XDocument.Parse(text, LoadOptions.PreserveWhitespace);
             }
         }
 
@@ -56,14 +56,15 @@ namespace Emby.Dlna.PlayTo
             }
 
             if (!serviceUrl.StartsWith("/"))
+            {
                 serviceUrl = "/" + serviceUrl;
+            }
 
             return baseUrl + serviceUrl;
         }
 
-        private readonly CultureInfo _usCulture = new CultureInfo("en-US");
-
-        public async Task SubscribeAsync(string url,
+        public async Task SubscribeAsync(
+            string url,
             string ip,
             int port,
             string localIp,
@@ -110,18 +111,16 @@ namespace Emby.Dlna.PlayTo
             options.RequestHeaders["FriendlyName.DLNA.ORG"] = FriendlyName;
 
             using (var response = await _httpClient.SendAsync(options, "GET").ConfigureAwait(false))
+            using (var stream = response.Content)
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
-                using (var stream = response.Content)
-                {
-                    using (var reader = new StreamReader(stream, Encoding.UTF8))
-                    {
-                        return XDocument.Parse(reader.ReadToEnd(), LoadOptions.PreserveWhitespace);
-                    }
-                }
+                string text = await reader.ReadToEndAsync().ConfigureAwait(false);
+                return XDocument.Parse(text, LoadOptions.PreserveWhitespace);
             }
         }
 
-        private Task<HttpResponseInfo> PostSoapDataAsync(string url,
+        private Task<HttpResponseInfo> PostSoapDataAsync(
+            string url,
             string soapAction,
             string postData,
             string header,
@@ -129,7 +128,9 @@ namespace Emby.Dlna.PlayTo
             CancellationToken cancellationToken)
         {
             if (!soapAction.StartsWith("\""))
+            {
                 soapAction = "\"" + soapAction + "\"";
+            }
 
             var options = new HttpRequestOptions
             {
@@ -142,7 +143,10 @@ namespace Emby.Dlna.PlayTo
                 // The periodic requests may keep some devices awake
                 LogRequestAsDebug = true,
 
-                CancellationToken = cancellationToken
+                CancellationToken = cancellationToken,
+                RequestContentType = "text/xml",
+                AppendCharsetToMimeType = true,
+                RequestContent = postData
             };
 
             options.RequestHeaders["SOAPAction"] = soapAction;
@@ -153,10 +157,6 @@ namespace Emby.Dlna.PlayTo
             {
                 options.RequestHeaders["contentFeatures.dlna.org"] = header;
             }
-
-            options.RequestContentType = "text/xml";
-            options.AppendCharsetToMimeType = true;
-            options.RequestContent = postData;
 
             return _httpClient.Post(options);
         }
