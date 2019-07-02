@@ -95,7 +95,7 @@ namespace Emby.Server.Implementations.Services
             {
                 // Used by IRequiresRequestStream
                 var requestParams = await GetRequestParams(httpReq).ConfigureAwait(false);
-                var request = ServiceHandler.CreateRequest(httpReq, restPath, requestParams, host.CreateInstance(requestType));
+                var request = CreateRequest(httpReq, restPath, requestParams, host.CreateInstance(requestType));
 
                 var rawReq = (IRequiresRequestStream)request;
                 rawReq.RequestStream = httpReq.InputStream;

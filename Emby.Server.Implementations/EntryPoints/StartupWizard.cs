@@ -16,13 +16,19 @@ namespace Emby.Server.Implementations.EntryPoints
         /// The _app host
         /// </summary>
         private readonly IServerApplicationHost _appHost;
+
         /// <summary>
         /// The _user manager
         /// </summary>
         private readonly ILogger _logger;
+        private readonly IServerConfigurationManager _config;
 
-        private IServerConfigurationManager _config;
-
+        /// <summary>
+        /// Creates a new instance of the StartupWizard class.
+        /// </summary>
+        /// <param name="appHost">The application host.</param>
+        /// <param name="logger">The logger.</param>
+        /// <param name="config">The configuration.</param>
         public StartupWizard(IServerApplicationHost appHost, ILogger logger, IServerConfigurationManager config)
         {
             _appHost = appHost;
@@ -30,36 +36,29 @@ namespace Emby.Server.Implementations.EntryPoints
             _config = config;
         }
 
-        /// <summary>
-        /// Runs this instance.
-        /// </summary>
+        /// <inheritdoc />
         public Task RunAsync()
         {
             if (!_appHost.CanLaunchWebBrowser)
             {
                 return Task.CompletedTask;
             }
+            var options = ((ApplicationHost)_appHost).StartupOptions;
+            if (options.NoAutoRunWebApp)
+            {
+                return Task.CompletedTask;
+            }
 
-            if (!_config.Configuration.IsStartupWizardCompleted)
+            if (!_config.Configuration.IsStartupWizardCompleted
+                || _config.Configuration.AutoRunWebApp)
             {
                 BrowserLauncher.OpenWebApp(_appHost);
-            }
-            else if (_config.Configuration.AutoRunWebApp)
-            {
-                var options = ((ApplicationHost)_appHost).StartupOptions;
-
-                if (!options.NoAutoRunWebApp)
-                {
-                    BrowserLauncher.OpenWebApp(_appHost);
-                }
             }
 
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
+        /// <inheritdoc />
         public void Dispose()
         {
         }

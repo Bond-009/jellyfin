@@ -94,7 +94,16 @@ namespace Emby.Server.Implementations.Services
             return list;
         }
 
-        public RestPath(Func<Type, object> createInstanceFn, Func<Type, Func<string, object>> getParseFn, Type requestType, Type serviceType, string path, string verbs, bool isHidden = false, string summary = null, string description = null)
+        public RestPath(
+            Func<Type, object> createInstanceFn,
+            Func<Type, Func<string, object>> getParseFn,
+            Type requestType,
+            Type serviceType,
+            string path,
+            string verbs,
+            bool isHidden = false,
+            string summary = null,
+            string description = null)
         {
             this.RequestType = requestType;
             this.ServiceType = serviceType;
@@ -195,7 +204,6 @@ namespace Emby.Server.Implementations.Services
             "IgnoreDataMemberAttribute",
             "JsonIgnoreAttribute"
         };
-
 
         private static Type excludeType = typeof(Stream);
 
@@ -437,9 +445,11 @@ namespace Emby.Server.Implementations.Services
                     && requestComponents.Length >= this.TotalComponentsCount - this.wildcardCount;
 
                 if (!isValidWildCardPath)
+                {
                     throw new ArgumentException(string.Format(
                         "Path Mismatch: Request Path '{0}' has invalid number of components compared to: '{1}'",
                         pathInfo, this.restPath));
+                }
             }
 
             var requestKeyValuesMap = new Dictionary<string, string>();

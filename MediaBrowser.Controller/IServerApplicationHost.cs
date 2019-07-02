@@ -81,8 +81,6 @@ namespace MediaBrowser.Controller
 
         void LaunchUrl(string url);
 
-        void EnableLoopback(string appName);
-
         WakeOnLanInfo[] GetWakeOnLanInfo();
 
         string ExpandVirtualPath(string path);

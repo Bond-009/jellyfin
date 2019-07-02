@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -110,7 +109,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using ServiceStack;
 using OperatingSystem = MediaBrowser.Common.System.OperatingSystem;
 
 namespace Emby.Server.Implementations
@@ -279,8 +277,6 @@ namespace Emby.Server.Implementations
         private ILiveTvManager LiveTvManager { get; set; }
 
         public LocalizationManager LocalizationManager { get; set; }
-
-        private IEncodingManager EncodingManager { get; set; }
 
         private IChannelManager ChannelManager { get; set; }
 
@@ -846,8 +842,7 @@ namespace Emby.Server.Implementations
             NotificationManager = new NotificationManager(LoggerFactory, UserManager, ServerConfigurationManager);
             serviceCollection.AddSingleton(NotificationManager);
 
-            serviceCollection.AddSingleton<IDeviceDiscovery>(
-                new DeviceDiscovery(LoggerFactory, ServerConfigurationManager, SocketFactory));
+            serviceCollection.AddSingleton(typeof(IDeviceDiscovery), typeof(DeviceDiscovery));
 
             ChapterManager = new ChapterManager(LibraryManager, LoggerFactory, ServerConfigurationManager, ItemRepository);
             serviceCollection.AddSingleton(ChapterManager);
@@ -865,8 +860,7 @@ namespace Emby.Server.Implementations
                 LocalizationManager);
             serviceCollection.AddSingleton(MediaEncoder);
 
-            EncodingManager = new MediaEncoder.EncodingManager(FileSystemManager, LoggerFactory, MediaEncoder, ChapterManager, LibraryManager);
-            serviceCollection.AddSingleton(EncodingManager);
+            serviceCollection.AddSingleton(typeof(IEncodingManager), typeof(MediaEncoder.EncodingManager));
 
             var activityLogRepo = GetActivityLogRepository();
             serviceCollection.AddSingleton(activityLogRepo);
@@ -1526,19 +1520,23 @@ namespace Emby.Server.Implementations
         public async Task<string> GetWanApiUrlFromExternal(CancellationToken cancellationToken)
         {
             const string Url = "http://ipv4.icanhazip.com";
+
             try
             {
-                using (var response = await HttpClient.Get(new HttpRequestOptions
+                using (var response = await HttpClient.SendAsync(new HttpRequestOptions
+                    {
+                        Url = Url,
+                        LogErrorResponseBody = false,
+                        LogErrors = false,
+                        LogRequest = false,
+                        BufferContent = false,
+                        CancellationToken = cancellationToken
+                    },
+                    HttpMethod.Get).ConfigureAwait(false))
+                using (Stream stream = response.Content)
+                using (StreamReader reader = new StreamReader(stream))
                 {
-                    Url = Url,
-                    LogErrorResponseBody = false,
-                    LogErrors = false,
-                    LogRequest = false,
-                    BufferContent = false,
-                    CancellationToken = cancellationToken
-                }).ConfigureAwait(false))
-                {
-                    string res = await response.ReadToEndAsync().ConfigureAwait(false);
+                    string res = await reader.ReadToEndAsync().ConfigureAwait(false);
                     return GetWanApiUrl(res.Trim());
                 }
             }
@@ -1564,13 +1562,18 @@ namespace Emby.Server.Implementations
         {
             if (EnableHttps)
             {
-                return string.Format("https://{0}:{1}",
+                return string.Format(
+                    CultureInfo.InvariantCulture,
+                    "https://{0}:{1}",
                     host,
                     HttpsPort.ToString(CultureInfo.InvariantCulture));
             }
-            return string.Format("http://{0}:{1}",
-                    host,
-                    HttpPort.ToString(CultureInfo.InvariantCulture));
+
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "http://{0}:{1}",
+                host,
+                HttpPort.ToString(CultureInfo.InvariantCulture));
         }
 
         public string GetWanApiUrl(IpAddressInfo ipAddress)
@@ -1591,6 +1594,7 @@ namespace Emby.Server.Implementations
                     host,
                     ServerConfigurationManager.Configuration.PublicHttpsPort.ToString(CultureInfo.InvariantCulture));
             }
+
             return string.Format("http://{0}:{1}",
                     host,
                     ServerConfigurationManager.Configuration.PublicPort.ToString(CultureInfo.InvariantCulture));
@@ -1645,7 +1649,6 @@ namespace Emby.Server.Implementations
         private IpAddressInfo NormalizeConfiguredLocalAddress(string address)
         {
             var index = address.Trim('/').IndexOf('/');
-
             if (index != -1)
             {
                 address = address.Substring(index + 1);
@@ -1663,8 +1666,8 @@ namespace Emby.Server.Implementations
 
         private async Task<bool> IsIpAddressValidAsync(IpAddressInfo address, CancellationToken cancellationToken)
         {
-            if (address.Equals(IpAddressInfo.Loopback) ||
-                address.Equals(IpAddressInfo.IPv6Loopback))
+            if (address.Equals(IpAddressInfo.Loopback)
+                || address.Equals(IpAddressInfo.IPv6Loopback))
             {
                 return true;
             }
@@ -1843,10 +1846,6 @@ namespace Emby.Server.Implementations
         private static void ProcessExited(object sender, EventArgs e)
         {
             ((IProcess)sender).Dispose();
-        }
-
-        public virtual void EnableLoopback(string appName)
-        {
         }
 
         private bool _disposed = false;

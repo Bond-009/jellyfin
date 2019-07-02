@@ -24,9 +24,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Diagnostics;
 using System.Net;
+using System.Net.Http;
 using MediaBrowser.Common.Net;
 using Microsoft.Extensions.Logging;
 
@@ -42,23 +41,21 @@ namespace Mono.Nat.Upnp
             : base(null)
         {
             if (string.IsNullOrEmpty(description))
+            {
                 _logger.LogWarning("Description is null");
+            }
 
             if (hostAddress == null)
+            {
                 _logger.LogWarning("hostaddress is null");
+            }
 
             this.servicesDescriptionUrl = description;
             this.hostAddress = hostAddress;
             _logger = logger;
         }
 
-        public override string Method
-        {
-            get
-            {
-                return "GET";
-            }
-        }
+        public override HttpMethod Method => HttpMethod.Get;
 
         public override HttpRequestOptions Encode()
         {

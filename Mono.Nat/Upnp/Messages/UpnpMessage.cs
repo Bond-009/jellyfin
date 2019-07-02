@@ -24,13 +24,9 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Diagnostics;
 using System.Xml;
-using System.Net;
-using System.IO;
+using System.Net.Http;
 using System.Text;
-using System.Globalization;
 using MediaBrowser.Common.Net;
 
 namespace Mono.Nat.Upnp
@@ -77,10 +73,7 @@ namespace Mono.Nat.Upnp
 
         public abstract HttpRequestOptions Encode();
 
-        public virtual string Method
-        {
-            get { return "POST"; }
-        }
+        public virtual HttpMethod Method => HttpMethod.Post;
 
         protected void WriteFullElement(XmlWriter writer, string element, string value)
         {

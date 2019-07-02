@@ -38,13 +38,13 @@ namespace Emby.Server.Implementations.EntryPoints
         {
             if (_appHost.CanSelfRestart)
             {
-                _appHost.HasPendingRestartChanged += _appHost_HasPendingRestartChanged;
+                _appHost.HasPendingRestartChanged += OnHasPendingRestartChanged;
             }
 
             return Task.CompletedTask;
         }
 
-        void _appHost_HasPendingRestartChanged(object sender, EventArgs e)
+        private void OnHasPendingRestartChanged(object sender, EventArgs e)
         {
             DisposeTimer();
 
@@ -108,7 +108,7 @@ namespace Emby.Server.Implementations.EntryPoints
 
         public void Dispose()
         {
-            _appHost.HasPendingRestartChanged -= _appHost_HasPendingRestartChanged;
+            _appHost.HasPendingRestartChanged -= OnHasPendingRestartChanged;
 
             DisposeTimer();
         }

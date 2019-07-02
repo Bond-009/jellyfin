@@ -22,18 +22,27 @@ namespace Emby.Server.Implementations.Udp
         /// The _logger
         /// </summary>
         private readonly ILogger _logger;
-
-        private bool _isDisposed;
+        private readonly IServerApplicationHost _appHost;
+        private readonly IJsonSerializer _json;
 
         private readonly List<Tuple<string, bool, Func<string, IpEndPointInfo, Encoding, CancellationToken, Task>>> _responders = new List<Tuple<string, bool, Func<string, IpEndPointInfo, Encoding, CancellationToken, Task>>>();
 
-        private readonly IServerApplicationHost _appHost;
-        private readonly IJsonSerializer _json;
+        /// <summary>
+        /// The _udp client
+        /// </summary>
+        private ISocket _udpClient;
+        private readonly ISocketFactory _socketFactory;
+        private readonly byte[] _receiveBuffer = new byte[8192];
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UdpServer" /> class.
         /// </summary>
-        public UdpServer(ILogger logger, IServerApplicationHost appHost, IJsonSerializer json, ISocketFactory socketFactory)
+        public UdpServer(
+            ILogger<UdpServer> logger,
+            IServerApplicationHost appHost,
+            IJsonSerializer json,
+            ISocketFactory socketFactory)
         {
             _logger = logger;
             _appHost = appHost;
@@ -104,8 +113,6 @@ namespace Emby.Server.Implementations.Udp
 
         private async Task RespondToV2Message(string messageText, IpEndPointInfo endpoint, Encoding encoding, CancellationToken cancellationToken)
         {
-            var parts = messageText.Split('|');
-
             var localUrl = await _appHost.GetLocalApiUrl(cancellationToken).ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(localUrl))
@@ -118,23 +125,12 @@ namespace Emby.Server.Implementations.Udp
                 };
 
                 await SendAsync(encoding.GetBytes(_json.SerializeToString(response)), endpoint, cancellationToken).ConfigureAwait(false);
-
-                if (parts.Length > 1)
-                {
-                    _appHost.EnableLoopback(parts[1]);
-                }
             }
             else
             {
                 _logger.LogWarning("Unable to respond to udp request because the local ip address could not be determined.");
             }
         }
-
-        /// <summary>
-        /// The _udp client
-        /// </summary>
-        private ISocket _udpClient;
-        private readonly ISocketFactory _socketFactory;
 
         /// <summary>
         /// Starts the specified port.
@@ -147,11 +143,9 @@ namespace Emby.Server.Implementations.Udp
             Task.Run(() => BeginReceive());
         }
 
-        private readonly byte[] _receiveBuffer = new byte[8192];
-
         private void BeginReceive()
         {
-            if (_isDisposed)
+            if (_disposed)
             {
                 return;
             }
@@ -177,7 +171,7 @@ namespace Emby.Server.Implementations.Udp
 
         private void OnReceiveResult(IAsyncResult result)
         {
-            if (_isDisposed)
+            if (_disposed)
             {
                 return;
             }
@@ -206,7 +200,7 @@ namespace Emby.Server.Implementations.Udp
         /// <param name="message">The message.</param>
         private void OnMessageReceived(SocketReceiveResult message)
         {
-            if (_isDisposed)
+            if (_disposed)
             {
                 return;
             }
@@ -243,20 +237,24 @@ namespace Emby.Server.Implementations.Udp
         /// <param name="dispose"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool dispose)
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             if (dispose)
             {
-                _isDisposed = true;
-
-                if (_udpClient != null)
-                {
-                    _udpClient.Dispose();
-                }
+                _udpClient?.Dispose();
             }
+
+            _udpClient = null;
+
+            _disposed = true;
         }
 
         public async Task SendAsync(byte[] bytes, IpEndPointInfo remoteEndPoint, CancellationToken cancellationToken)
         {
-            if (_isDisposed)
+            if (_disposed)
             {
                 throw new ObjectDisposedException(GetType().Name);
             }

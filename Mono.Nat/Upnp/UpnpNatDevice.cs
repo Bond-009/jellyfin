@@ -27,11 +27,9 @@
 //
 
 using System;
-using System.IO;
 using System.Net;
 using System.Xml;
 using System.Text;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
 using Microsoft.Extensions.Logging;
@@ -50,9 +48,7 @@ namespace Mono.Nat.Upnp
         private readonly IHttpClient _httpClient;
 
         public override IPAddress LocalAddress
-        {
-            get { return localAddress; }
-        }
+            => localAddress;
 
         internal UpnpNatDevice(IPAddress localAddress, UpnpDeviceInfo deviceInfo, IPEndPoint hostEndPoint, string serviceType, ILogger logger, IHttpClient httpClient)
         {
@@ -89,7 +85,7 @@ namespace Mono.Nat.Upnp
             }
             else
             {
-                _logger.LogDebug("Couldn't decode address. Please send following string to the developer: ");
+                _logger.LogDebug("Couldn't decode address. Please send following string to the developer: {String}", locationDetails);
             }
         }
 
@@ -100,11 +96,11 @@ namespace Mono.Nat.Upnp
 
             using (var response = await _httpClient.SendAsync(message.Encode(), message.Method).ConfigureAwait(false))
             {
-                OnServicesReceived(response);
+                await OnServicesReceived(response).ConfigureAwait(false);
             }
         }
 
-        private void OnServicesReceived(HttpResponseInfo response)
+        private async Task OnServicesReceived(HttpResponseInfo response)
         {
             int abortCount = 0;
             int bytesRead = 0;
@@ -122,7 +118,7 @@ namespace Mono.Nat.Upnp
 
                 while (true)
                 {
-                    bytesRead = s.Read(buffer, 0, buffer.Length);
+                    bytesRead = await s.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
                     servicesXml.Append(Encoding.UTF8.GetString(buffer, 0, bytesRead));
                     try
                     {
@@ -139,8 +135,9 @@ namespace Mono.Nat.Upnp
                         {
                             return;
                         }
+
                         _logger.LogDebug("{0}: Couldn't parse services list", HostEndPoint);
-                        System.Threading.Thread.Sleep(10);
+                        await Task.Delay(10).ConfigureAwait(false);
                     }
                 }
 
@@ -150,16 +147,16 @@ namespace Mono.Nat.Upnp
 
                 foreach (XmlNode node in nodes)
                 {
-                    //Go through each service there
+                    // Go through each service there
                     foreach (XmlNode service in node.ChildNodes)
                     {
-                        //If the service is a WANIPConnection, then we have what we want
+                        // If the service is a WANIPConnection, then we have what we want
                         string type = service["serviceType"].InnerText;
                         _logger.LogDebug("{0}: Found service: {1}", HostEndPoint, type);
 
                         // TODO: Add support for version 2 of UPnP.
-                        if (string.Equals(type, "urn:schemas-upnp-org:service:WANPPPConnection:1", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(type, "urn:schemas-upnp-org:service:WANIPConnection:1", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(type, "urn:schemas-upnp-org:service:WANPPPConnection:1", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(type, "urn:schemas-upnp-org:service:WANIPConnection:1", StringComparison.OrdinalIgnoreCase))
                         {
                             this.controlUrl = service["controlURL"].InnerText;
                             _logger.LogDebug("{0}: Found upnp service at: {1}", HostEndPoint, controlUrl);
@@ -174,9 +171,9 @@ namespace Mono.Nat.Upnp
                                     if (IPAddress.TryParse(u.Host, out parsedHostIpAddress))
                                     {
                                         this.hostEndPoint = new IPEndPoint(parsedHostIpAddress, u.Port);
-                                        //_logger.LogDebug("{0}: Absolute URI detected. Host address is now: {1}", old, HostEndPoint);
+                                        _logger.LogDebug("{0}: Absolute URI detected. Host address is now: {1}", old, HostEndPoint);
                                         this.controlUrl = controlUrl.Substring(u.GetLeftPart(UriPartial.Authority).Length);
-                                        //_logger.LogDebug("{0}: New control url: {1}", HostEndPoint, controlUrl);
+                                        _logger.LogDebug("{0}: New control url: {1}", HostEndPoint, controlUrl);
                                     }
                                 }
                             }
@@ -184,6 +181,7 @@ namespace Mono.Nat.Upnp
                             {
                                 _logger.LogDebug("{0}: Assuming control Uri is relative: {1}", HostEndPoint, controlUrl);
                             }
+
                             return;
                         }
                     }
@@ -197,34 +195,22 @@ namespace Mono.Nat.Upnp
         /// <summary>
         /// The EndPoint that the device is at
         /// </summary>
-        internal EndPoint HostEndPoint
-        {
-            get { return this.hostEndPoint; }
-        }
+        internal EndPoint HostEndPoint => this.hostEndPoint;
 
         /// <summary>
         /// The relative url of the xml file that describes the list of services is at
         /// </summary>
-        internal string ServiceDescriptionUrl
-        {
-            get { return this.serviceDescriptionUrl; }
-        }
+        internal string ServiceDescriptionUrl => this.serviceDescriptionUrl;
 
         /// <summary>
         /// The relative url that we can use to control the port forwarding
         /// </summary>
-        internal string ControlUrl
-        {
-            get { return this.controlUrl; }
-        }
+        internal string ControlUrl => this.controlUrl;
 
         /// <summary>
         /// The service type we're using on the device
         /// </summary>
-        public string ServiceType
-        {
-            get { return serviceType; }
-        }
+        public string ServiceType => serviceType;
 
         public override async Task CreatePortMap(Mapping mapping)
         {
@@ -261,7 +247,7 @@ namespace Mono.Nat.Upnp
         public override string ToString()
         {
             //GetExternalIP is blocking and can throw exceptions, can't use it here.
-            return String.Format(
+            return string.Format(
                 "UpnpNatDevice - EndPoint: {0}, External IP: {1}, Control Url: {2}, Service Description Url: {3}, Service Type: {4}, Last Seen: {5}",
                 this.hostEndPoint, "Manually Check" /*this.GetExternalIP()*/, this.controlUrl, this.serviceDescriptionUrl, this.serviceType, this.LastSeen);
         }

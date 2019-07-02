@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Net;
@@ -27,38 +27,49 @@ namespace Emby.Server.Implementations.EntryPoints
 
         private NatManager _natManager;
 
-        public ExternalPortForwarding(ILoggerFactory loggerFactory, IServerApplicationHost appHost, IServerConfigurationManager config, IDeviceDiscovery deviceDiscovery, IHttpClient httpClient)
+        private string _lastConfigIdentifier;
+
+        private List<string> _createdRules = new List<string>();
+        private List<string> _usnsHandled = new List<string>();
+
+        private bool _disposed = false;
+
+        public ExternalPortForwarding(
+            ILogger<ExternalPortForwarding> logger,
+            IServerApplicationHost appHost,
+            IServerConfigurationManager config,
+            IDeviceDiscovery deviceDiscovery,
+            IHttpClient httpClient)
         {
-            _logger = loggerFactory.CreateLogger("PortMapper");
+            _logger = logger;
             _appHost = appHost;
             _config = config;
             _deviceDiscovery = deviceDiscovery;
             _httpClient = httpClient;
-            _config.ConfigurationUpdated += _config_ConfigurationUpdated1;
+            _config.ConfigurationUpdated += OnConfigurationUpdated;
         }
 
-        private void _config_ConfigurationUpdated1(object sender, EventArgs e)
-        {
-            _config_ConfigurationUpdated(sender, e);
-        }
-
-        private string _lastConfigIdentifier;
         private string GetConfigIdentifier()
         {
-            var values = new List<string>();
             var config = _config.Configuration;
+            StringBuilder str = new StringBuilder();
 
-            values.Add(config.EnableUPnP.ToString());
-            values.Add(config.PublicPort.ToString(CultureInfo.InvariantCulture));
-            values.Add(_appHost.HttpPort.ToString(CultureInfo.InvariantCulture));
-            values.Add(_appHost.HttpsPort.ToString(CultureInfo.InvariantCulture));
-            values.Add(_appHost.EnableHttps.ToString());
-            values.Add((config.EnableRemoteAccess).ToString());
+            str.Append(config.EnableUPnP);
+            str.Append('|');
+            str.Append(config.PublicPort);
+            str.Append('|');
+            str.Append(_appHost.HttpPort);
+            str.Append('|');
+            str.Append(_appHost.HttpsPort);
+            str.Append('|');
+            str.Append(_appHost.EnableHttps);
+            str.Append('|');
+            str.Append(config.EnableRemoteAccess);
 
-            return string.Join("|", values.ToArray());
+            return str.ToString();
         }
 
-        private async void _config_ConfigurationUpdated(object sender, EventArgs e)
+        private async void OnConfigurationUpdated(object sender, EventArgs e)
         {
             if (!string.Equals(_lastConfigIdentifier, GetConfigIdentifier(), StringComparison.OrdinalIgnoreCase))
             {
@@ -68,6 +79,7 @@ namespace Emby.Server.Implementations.EntryPoints
             }
         }
 
+        /// <inheritdoc />
         public Task RunAsync()
         {
             if (_config.Configuration.EnableUPnP && _config.Configuration.EnableRemoteAccess)
@@ -75,8 +87,8 @@ namespace Emby.Server.Implementations.EntryPoints
                 Start();
             }
 
-            _config.ConfigurationUpdated -= _config_ConfigurationUpdated;
-            _config.ConfigurationUpdated += _config_ConfigurationUpdated;
+            _config.ConfigurationUpdated -= OnConfigurationUpdated;
+            _config.ConfigurationUpdated += OnConfigurationUpdated;
 
             return Task.CompletedTask;
         }
@@ -87,18 +99,18 @@ namespace Emby.Server.Implementations.EntryPoints
             if (_natManager == null)
             {
                 _natManager = new NatManager(_logger, _httpClient);
-                _natManager.DeviceFound += NatUtility_DeviceFound;
+                _natManager.DeviceFound += OnNatUtilityDeviceFound;
                 _natManager.StartDiscovery();
             }
 
             _timer = new Timer(ClearCreatedRules, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
-            _deviceDiscovery.DeviceDiscovered += _deviceDiscovery_DeviceDiscovered;
+            _deviceDiscovery.DeviceDiscovered += OnDeviceDiscovered;
 
             _lastConfigIdentifier = GetConfigIdentifier();
         }
 
-        private async void _deviceDiscovery_DeviceDiscovered(object sender, GenericEventArgs<UpnpDeviceInfo> e)
+        private async void OnDeviceDiscovered(object sender, GenericEventArgs<UpnpDeviceInfo> e)
         {
             if (_disposed)
             {
@@ -107,15 +119,21 @@ namespace Emby.Server.Implementations.EntryPoints
 
             var info = e.Argument;
 
-            if (!info.Headers.TryGetValue("USN", out string usn)) usn = string.Empty;
+            if (!info.Headers.TryGetValue("USN", out string usn))
+            {
+                usn = string.Empty;
+            }
 
-            if (!info.Headers.TryGetValue("NT", out string nt)) nt = string.Empty;
+            if (!info.Headers.TryGetValue("NT", out string nt))
+            {
+                nt = string.Empty;
+            }
 
             // Filter device type
-            if (usn.IndexOf("WANIPConnection:", StringComparison.OrdinalIgnoreCase) == -1 &&
-                     nt.IndexOf("WANIPConnection:", StringComparison.OrdinalIgnoreCase) == -1 &&
-                     usn.IndexOf("WANPPPConnection:", StringComparison.OrdinalIgnoreCase) == -1 &&
-                     nt.IndexOf("WANPPPConnection:", StringComparison.OrdinalIgnoreCase) == -1)
+            if (usn.IndexOf("WANIPConnection:", StringComparison.OrdinalIgnoreCase) == -1
+                && nt.IndexOf("WANIPConnection:", StringComparison.OrdinalIgnoreCase) == -1
+                && usn.IndexOf("WANPPPConnection:", StringComparison.OrdinalIgnoreCase) == -1
+                && nt.IndexOf("WANPPPConnection:", StringComparison.OrdinalIgnoreCase) == -1)
             {
                 return;
             }
@@ -133,35 +151,34 @@ namespace Emby.Server.Implementations.EntryPoints
                 {
                     return;
                 }
+
                 _usnsHandled.Add(identifier);
             }
 
-            _logger.LogDebug("Found NAT device: " + identifier);
+            _logger.LogDebug("Found NAT device: {Id}", identifier);
 
             if (IPAddress.TryParse(info.Location.Host, out var address))
             {
-                // The Handle method doesn't need the port
-                var endpoint = new IPEndPoint(address, info.Location.Port);
 
-                IPAddress localAddress = null;
+                string localAddressString;
 
                 try
                 {
-                    var localAddressString = await _appHost.GetLocalApiUrl(CancellationToken.None).ConfigureAwait(false);
-
-                    if (Uri.TryCreate(localAddressString, UriKind.Absolute, out var uri))
-                    {
-                        localAddressString = uri.Host;
-
-                        if (!IPAddress.TryParse(localAddressString, out localAddress))
-                        {
-                            return;
-                        }
-                    }
+                    localAddressString = await _appHost.GetLocalApiUrl(CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error");
+                    return;
+                }
+
+                if (Uri.TryCreate(localAddressString, UriKind.Absolute, out Uri uri))
+                {
+                    localAddressString = uri.Host;
+                }
+
+                if (!IPAddress.TryParse(localAddressString, out IPAddress localAddress))
+                {
                     return;
                 }
 
@@ -170,16 +187,11 @@ namespace Emby.Server.Implementations.EntryPoints
                     return;
                 }
 
-                // This should never happen, but the Handle method will throw ArgumentNullException if it does
-                if (localAddress == null)
+                if (_natManager != null)
                 {
-                    return;
-                }
-
-                var natManager = _natManager;
-                if (natManager != null)
-                {
-                    await natManager.Handle(localAddress, info, endpoint, NatProtocol.Upnp).ConfigureAwait(false);
+                    // The Handle method doesn't need the port
+                    var endpoint = new IPEndPoint(address, info.Location.Port);
+                    await _natManager.Handle(localAddress, info, endpoint, NatProtocol.Upnp).ConfigureAwait(false);
                 }
             }
         }
@@ -190,13 +202,14 @@ namespace Emby.Server.Implementations.EntryPoints
             {
                 _createdRules.Clear();
             }
+
             lock (_usnsHandled)
             {
                 _usnsHandled.Clear();
             }
         }
 
-        void NatUtility_DeviceFound(object sender, DeviceEventArgs e)
+        private async void OnNatUtilityDeviceFound(object sender, DeviceEventArgs e)
         {
             if (_disposed)
             {
@@ -207,7 +220,7 @@ namespace Emby.Server.Implementations.EntryPoints
             {
                 var device = e.Device;
 
-                CreateRules(device);
+                await CreateRules(device).ConfigureAwait(false);
             }
             catch
             {
@@ -216,9 +229,7 @@ namespace Emby.Server.Implementations.EntryPoints
             }
         }
 
-        private List<string> _createdRules = new List<string>();
-        private List<string> _usnsHandled = new List<string>();
-        private async void CreateRules(INatDevice device)
+        private async Task CreateRules(INatDevice device)
         {
             if (_disposed)
             {
@@ -273,7 +284,7 @@ namespace Emby.Server.Implementations.EntryPoints
             });
         }
 
-        private bool _disposed = false;
+        /// <inheritdoc />
         public void Dispose()
         {
             _disposed = true;
@@ -290,7 +301,7 @@ namespace Emby.Server.Implementations.EntryPoints
                 _timer = null;
             }
 
-            _deviceDiscovery.DeviceDiscovered -= _deviceDiscovery_DeviceDiscovered;
+            _deviceDiscovery.DeviceDiscovered -= OnDeviceDiscovered;
 
             var natManager = _natManager;
 
@@ -303,7 +314,7 @@ namespace Emby.Server.Implementations.EntryPoints
                     try
                     {
                         natManager.StopDiscovery();
-                        natManager.DeviceFound -= NatUtility_DeviceFound;
+                        natManager.DeviceFound -= OnNatUtilityDeviceFound;
                     }
                     catch (Exception ex)
                     {
