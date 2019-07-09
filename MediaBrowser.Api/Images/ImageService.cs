@@ -646,7 +646,7 @@ namespace MediaBrowser.Api.Images
                 IsHeadRequest = isHeadRequest,
                 Path = imageResult.Item1,
 
-                FileShare = FileShareMode.Read
+                FileShare = FileShare.Read
 
             }).ConfigureAwait(false);
         }

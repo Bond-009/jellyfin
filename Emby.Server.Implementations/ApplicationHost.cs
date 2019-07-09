@@ -595,8 +595,6 @@ namespace Emby.Server.Implementations
                 HttpsPort = ServerConfiguration.DefaultHttpsPort;
             }
 
-            JsonSerializer = new JsonSerializer(FileSystemManager);
-
             if (Plugins != null)
             {
                 var pluginBuilder = new StringBuilder();
@@ -694,6 +692,7 @@ namespace Emby.Server.Implementations
 
             serviceCollection.AddSingleton<IConfiguration>(_configuration);
 
+            JsonSerializer = new JsonSerializer();
             serviceCollection.AddSingleton(JsonSerializer);
 
             serviceCollection.AddSingleton(LoggerFactory);
@@ -706,7 +705,6 @@ namespace Emby.Server.Implementations
             HttpClient = new HttpClientManager.HttpClientManager(
                 ApplicationPaths,
                 LoggerFactory.CreateLogger<HttpClientManager.HttpClientManager>(),
-                FileSystemManager,
                 () => ApplicationUserAgent);
             serviceCollection.AddSingleton(HttpClient);
 

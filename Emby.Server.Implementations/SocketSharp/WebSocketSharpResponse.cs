@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -8,7 +7,6 @@ using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using IRequest = MediaBrowser.Model.Services.IRequest;
 
 namespace Emby.Server.Implementations.SocketSharp
 {
@@ -58,26 +56,26 @@ namespace Emby.Server.Implementations.SocketSharp
 
         public bool SendChunked { get; set; }
 
-        const int StreamCopyToBufferSize = 81920;
-        public async Task TransmitFile(string path, long offset, long count, FileShareMode fileShareMode, IFileSystem fileSystem, IStreamHelper streamHelper, CancellationToken cancellationToken)
+        public async Task TransmitFile(
+            string path,
+            long offset,
+            long count,
+            FileShare fileShare,
+            IStreamHelper streamHelper,
+            CancellationToken cancellationToken)
         {
-            var allowAsync = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-            //if (count <= 0)
-            //{
-            //    allowAsync = true;
-            //}
-
-            var fileOpenOptions = FileOpenOptions.SequentialScan;
-
-            if (allowAsync)
-            {
-                fileOpenOptions |= FileOpenOptions.Asynchronous;
-            }
-
             // use non-async filestream along with read due to https://github.com/dotnet/corefx/issues/6039
+            var fileOptions = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? FileOptions.SequentialScan
+                : FileOptions.SequentialScan | FileOptions.Asynchronous;
 
-            using (var fs = fileSystem.GetFileStream(path, FileOpenMode.Open, FileAccessMode.Read, fileShareMode, fileOpenOptions))
+            using (var fs = new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                fileShare,
+                StreamDefaults.DefaultFileStreamBufferSize,
+                fileOptions))
             {
                 if (offset > 0)
                 {
@@ -90,7 +88,7 @@ namespace Emby.Server.Implementations.SocketSharp
                 }
                 else
                 {
-                    await fs.CopyToAsync(OutputStream, StreamCopyToBufferSize, cancellationToken).ConfigureAwait(false);
+                    await fs.CopyToAsync(OutputStream, StreamDefaults.DefaultCopyToBufferSize, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

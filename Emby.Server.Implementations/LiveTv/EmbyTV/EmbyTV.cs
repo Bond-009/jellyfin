@@ -1960,7 +1960,11 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
                 return;
             }
 
-            using (var stream = _fileSystem.GetFileStream(nfoPath, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read))
+            using (var stream = new FileStream(
+                nfoPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.Read))
             {
                 var settings = new XmlWriterSettings
                 {
@@ -2022,7 +2026,11 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
                 return;
             }
 
-            using (var stream = _fileSystem.GetFileStream(nfoPath, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read))
+            using (var stream = new FileStream(
+                nfoPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.Read))
             {
                 var settings = new XmlWriterSettings
                 {

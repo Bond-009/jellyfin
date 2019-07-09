@@ -138,7 +138,7 @@ namespace MediaBrowser.Api.Playback.Hls
             var file = request.SegmentId + Path.GetExtension(Request.PathInfo);
             file = Path.Combine(_appPaths.TranscodingTempPath, file);
 
-            return ResultFactory.GetStaticFileResult(Request, file, FileShareMode.ReadWrite);
+            return ResultFactory.GetStaticFileResult(Request, file, FileShare.ReadWrite);
         }
 
         private Task<object> GetFileResult(string path, string playlistPath)
@@ -148,7 +148,7 @@ namespace MediaBrowser.Api.Playback.Hls
             return ResultFactory.GetStaticFileResult(Request, new StaticFileResultOptions
             {
                 Path = path,
-                FileShare = FileShareMode.ReadWrite,
+                FileShare = FileShare.ReadWrite,
                 OnComplete = () =>
                 {
                     if (transcodingJob != null)

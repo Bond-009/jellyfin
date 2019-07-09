@@ -518,7 +518,7 @@ namespace MediaBrowser.Api.Playback.Hls
             return ResultFactory.GetStaticFileResult(Request, new StaticFileResultOptions
             {
                 Path = segmentPath,
-                FileShare = FileShareMode.ReadWrite,
+                FileShare = FileShare.ReadWrite,
                 OnComplete = () =>
                 {
                     if (transcodingJob != null)

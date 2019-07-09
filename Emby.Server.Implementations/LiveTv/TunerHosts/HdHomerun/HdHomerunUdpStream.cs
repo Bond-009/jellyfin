@@ -162,7 +162,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts.HdHomerun
             var resolved = false;
 
             using (var source = _socketFactory.CreateNetworkStream(udpClient, false))
-            using (var fileStream = FileSystem.GetFileStream(file, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read, FileOpenOptions.None))
+            using (var fileStream = new FileStream(file, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
                 var currentCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, new CancellationTokenSource(TimeSpan.FromSeconds(30)).Token).Token;
 

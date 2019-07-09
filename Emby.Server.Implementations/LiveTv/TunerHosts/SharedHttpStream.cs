@@ -116,9 +116,20 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
                     Logger.LogInformation("Beginning {0} stream to {1}", GetType().Name, TempFilePath);
                     using (response)
                     using (var stream = response.Content)
-                    using (var fileStream = FileSystem.GetFileStream(TempFilePath, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read, FileOpenOptions.None))
+                    using (var fileStream = new FileStream(
+                        TempFilePath,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.Read,
+                        StreamDefaults.DefaultFileStreamBufferSize,
+                        Environment.OSVersion.Platform != PlatformID.Win32NT))
                     {
-                        await ApplicationHost.StreamHelper.CopyToAsync(stream, fileStream, 81920, () => Resolve(openTaskCompletionSource), cancellationToken).ConfigureAwait(false);
+                        await ApplicationHost.StreamHelper.CopyToAsync(
+                            stream,
+                            fileStream,
+                            StreamDefaults.DefaultCopyToBufferSize,
+                            () => Resolve(openTaskCompletionSource),
+                            cancellationToken).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -128,6 +139,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
                 {
                     Logger.LogError(ex, "Error copying live stream.");
                 }
+
                 EnableStreamSharing = false;
                 await DeleteTempFiles(new List<string> { TempFilePath }).ConfigureAwait(false);
             });

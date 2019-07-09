@@ -5,12 +5,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Emby.Server.Implementations.Services;
-using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
@@ -437,9 +435,10 @@ namespace Emby.Server.Implementations.HttpServer
             return null;
         }
 
-        public Task<object> GetStaticFileResult(IRequest requestContext,
+        public Task<object> GetStaticFileResult(
+            IRequest requestContext,
             string path,
-            FileShareMode fileShare = FileShareMode.Read)
+            FileShare fileShare = FileShare.Read)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -463,7 +462,7 @@ namespace Emby.Server.Implementations.HttpServer
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (fileShare != FileShareMode.Read && fileShare != FileShareMode.ReadWrite)
+            if (fileShare != FileShare.Read && fileShare != FileShare.ReadWrite)
             {
                 throw new ArgumentException("FileShare must be either Read or ReadWrite");
             }
@@ -491,10 +490,8 @@ namespace Emby.Server.Implementations.HttpServer
         /// <param name="path">The path.</param>
         /// <param name="fileShare">The file share.</param>
         /// <returns>Stream.</returns>
-        private Stream GetFileStream(string path, FileShareMode fileShare)
-        {
-            return _fileSystem.GetFileStream(path, FileOpenMode.Open, FileAccessMode.Read, fileShare);
-        }
+        private static Stream GetFileStream(string path, FileShare fileShare)
+            => new FileStream(path, FileMode.Open, FileAccess.Read, fileShare);
 
         public Task<object> GetStaticResult(IRequest requestContext,
             Guid cacheKey,

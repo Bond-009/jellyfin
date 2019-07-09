@@ -79,14 +79,20 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
 
         protected Stream GetInputStream(string path, bool allowAsyncFileRead)
         {
-            var fileOpenOptions = FileOpenOptions.SequentialScan;
+            var fileOptions = FileOptions.SequentialScan;
 
             if (allowAsyncFileRead)
             {
-                fileOpenOptions |= FileOpenOptions.Asynchronous;
+                fileOptions |= FileOptions.Asynchronous;
             }
 
-            return FileSystem.GetFileStream(path, FileOpenMode.Open, FileAccessMode.Read, FileShareMode.ReadWrite, fileOpenOptions);
+            return new FileStream(
+                path,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite,
+                StreamDefaults.DefaultFileStreamBufferSize,
+                fileOptions);
         }
 
         public Task DeleteTempFiles()

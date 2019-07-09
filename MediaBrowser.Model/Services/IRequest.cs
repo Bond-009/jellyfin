@@ -115,7 +115,7 @@ namespace MediaBrowser.Model.Services
 
         Stream OutputStream { get; }
 
-        Task TransmitFile(string path, long offset, long count, FileShareMode fileShareMode, IFileSystem fileSystem, IStreamHelper streamHelper, CancellationToken cancellationToken);
+        Task TransmitFile(string path, long offset, long count, FileShare fileShare, IStreamHelper streamHelper, CancellationToken cancellationToken);
 
         bool SendChunked { get; set; }
     }

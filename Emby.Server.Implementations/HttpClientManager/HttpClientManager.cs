@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
@@ -23,9 +22,9 @@ namespace Emby.Server.Implementations.HttpClientManager
     /// </summary>
     public class HttpClientManager : IHttpClient
     {
+        private static readonly bool _asyncFileStreamRead = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         private readonly ILogger _logger;
         private readonly IApplicationPaths _appPaths;
-        private readonly IFileSystem _fileSystem;
         private readonly Func<string> _defaultUserAgentFn;
 
         /// <summary>
@@ -41,7 +40,6 @@ namespace Emby.Server.Implementations.HttpClientManager
         public HttpClientManager(
             IApplicationPaths appPaths,
             ILogger<HttpClientManager> logger,
-            IFileSystem fileSystem,
             Func<string> defaultUserAgentFn)
         {
             if (appPaths == null)
@@ -55,7 +53,6 @@ namespace Emby.Server.Implementations.HttpClientManager
             }
 
             _logger = logger;
-            _fileSystem = fileSystem;
             _appPaths = appPaths;
             _defaultUserAgentFn = defaultUserAgentFn;
         }
@@ -254,10 +251,16 @@ namespace Emby.Server.Implementations.HttpClientManager
 
         private HttpResponseInfo GetCachedResponse(string responseCachePath, TimeSpan cacheLength, string url)
         {
-            if (File.Exists(responseCachePath)
-                && _fileSystem.GetLastWriteTimeUtc(responseCachePath).Add(cacheLength) > DateTime.UtcNow)
+            var fileInfo = new FileInfo(responseCachePath);
+            if (fileInfo.Exists && fileInfo.LastWriteTimeUtc > DateTime.UtcNow - cacheLength)
             {
-                var stream = _fileSystem.GetFileStream(responseCachePath, FileOpenMode.Open, FileAccessMode.Read, FileShareMode.Read, true);
+                var stream = new FileStream(
+                    responseCachePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read,
+                    StreamDefaults.DefaultFileStreamBufferSize,
+                    _asyncFileStreamRead);
 
                 return new HttpResponseInfo
                 {
@@ -275,7 +278,13 @@ namespace Emby.Server.Implementations.HttpClientManager
         {
             Directory.CreateDirectory(Path.GetDirectoryName(responseCachePath));
 
-            using (var fileStream = _fileSystem.GetFileStream(responseCachePath, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.None, true))
+            using (var fileStream = new FileStream(
+                responseCachePath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                StreamDefaults.DefaultFileStreamBufferSize,
+                true))
             {
                 await response.Content.CopyToAsync(fileStream).ConfigureAwait(false);
 
@@ -423,7 +432,13 @@ namespace Emby.Server.Implementations.HttpClientManager
                     options.CancellationToken.ThrowIfCancellationRequested();
 
                     using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
-                    using (var fs = _fileSystem.GetFileStream(tempFile, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read, true))
+                    using (var fs = new FileStream(
+                        tempFile,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.Read,
+                        StreamDefaults.DefaultFileStreamBufferSize,
+                        true))
                     {
                         await stream.CopyToAsync(fs, StreamDefaults.DefaultCopyToBufferSize, options.CancellationToken).ConfigureAwait(false);
                     }

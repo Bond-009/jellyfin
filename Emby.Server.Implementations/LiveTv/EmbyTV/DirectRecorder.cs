@@ -44,7 +44,11 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
         {
             Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
 
-            using (var output = _fileSystem.GetFileStream(targetFile, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read))
+            using (var output = new FileStream(
+                targetFile,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.Read))
             {
                 onStarted();
 
@@ -80,7 +84,11 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
 
                 Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
 
-                using (var output = _fileSystem.GetFileStream(targetFile, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read))
+                using (var output = new FileStream(
+                    targetFile,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.Read))
                 {
                     onStarted();
 

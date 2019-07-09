@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Emby.Server.Implementations.IO;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
 using Microsoft.Extensions.Logging;
@@ -32,7 +32,7 @@ namespace Emby.Server.Implementations.HttpServer
         private static readonly CultureInfo UsCulture = new CultureInfo("en-US");
         public List<Cookie> Cookies { get; private set; }
 
-        public FileShareMode FileShare { get; set; }
+        public FileShare FileShare { get; set; }
 
         /// <summary>
         /// The _options
@@ -76,7 +76,7 @@ namespace Emby.Server.Implementations.HttpServer
                 SetRangeValues();
             }
 
-            FileShare = FileShareMode.Read;
+            FileShare = FileShare.Read;
             Cookies = new List<Cookie>();
         }
 
@@ -185,7 +185,7 @@ namespace Emby.Server.Implementations.HttpServer
                     count = 0;
                 }
 
-                await response.TransmitFile(path, offset, count, FileShare, _fileSystem, _streamHelper, cancellationToken).ConfigureAwait(false);
+                await response.TransmitFile(path, offset, count, FileShare, _streamHelper, cancellationToken).ConfigureAwait(false);
             }
             finally
             {

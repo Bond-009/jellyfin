@@ -107,8 +107,10 @@ namespace MediaBrowser.Model.IO
         /// <param name="share">The share.</param>
         /// <param name="isAsync">if set to <c>true</c> [is asynchronous].</param>
         /// <returns>FileStream.</returns>
+        [Obsolete("Use the FileStream ctor instead")]
         Stream GetFileStream(string path, FileOpenMode mode, FileAccessMode access, FileShareMode share, bool isAsync = false);
 
+        [Obsolete("Use the FileStream ctor instead")]
         Stream GetFileStream(string path, FileOpenMode mode, FileAccessMode access, FileShareMode share,
             FileOpenOptions fileOpenOptions);
 
