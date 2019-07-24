@@ -5,11 +5,18 @@ using MediaBrowser.Model.System;
 
 namespace MediaBrowser.Common.System
 {
+    /// <summary>
+    /// Identifies the operating system.
+    /// </summary>
     public static class OperatingSystem
     {
         // We can't use Interlocked.CompareExchange for enums
         private static int _id = int.MaxValue;
 
+        /// <summary>
+        /// Gets the operating system ID.
+        /// </summary>
+        /// <value>The operating system ID.</value>
         public static OperatingSystemId Id
         {
             get
@@ -23,6 +30,10 @@ namespace MediaBrowser.Common.System
             }
         }
 
+        /// <summary>
+        /// Gets the user-friendly name for the operating system.
+        /// </summary>
+        /// <value>A user-friendly name of the operating system.</value>
         public static string Name
         {
             get
@@ -33,7 +44,7 @@ namespace MediaBrowser.Common.System
                     case OperatingSystemId.Linux: return "Linux";
                     case OperatingSystemId.Darwin: return "macOS";
                     case OperatingSystemId.Windows: return "Windows";
-                    default: throw new Exception($"Unknown OS {Id}");
+                    default: throw new PlatformNotSupportedException($"Unknown OS {Id}");
                 }
             }
         }
@@ -64,7 +75,7 @@ namespace MediaBrowser.Common.System
                             return OperatingSystemId.BSD;
                         }
 
-                        throw new Exception($"Can't resolve OS with description: '{osDescription}'");
+                        throw new PlatformNotSupportedException($"Can't resolve OS with description: '{osDescription}'");
                     }
             }
         }
