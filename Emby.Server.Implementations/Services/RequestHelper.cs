@@ -5,7 +5,7 @@ using Emby.Server.Implementations.HttpServer;
 
 namespace Emby.Server.Implementations.Services
 {
-    public class RequestHelper
+    public static class RequestHelper
     {
         public static Func<Type, Stream, Task<object>> GetRequestReader(HttpListenerHost host, string contentType)
         {

@@ -358,7 +358,7 @@ namespace Emby.Server.Implementations.HttpClientManager
                     using (var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                     using (var fs = _fileSystem.GetFileStream(tempFile, FileOpenMode.Create, FileAccessMode.Write, FileShareMode.Read, true))
                     {
-                        await stream.CopyToAsync(fs, StreamDefaults.DefaultCopyToBufferSize, options.CancellationToken).ConfigureAwait(false);
+                        await stream.CopyToAsync(fs, StreamDefaults.CopyToBufferSize, options.CancellationToken).ConfigureAwait(false);
                     }
 
                     options.Progress.Report(100);

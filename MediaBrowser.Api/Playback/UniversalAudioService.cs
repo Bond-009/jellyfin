@@ -9,7 +9,6 @@ using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Devices;
 using MediaBrowser.Controller.Dlna;
-using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Net;
@@ -87,12 +86,10 @@ namespace MediaBrowser.Api.Playback
             IDeviceManager deviceManager,
             ISubtitleEncoder subtitleEncoder,
             IMediaSourceManager mediaSourceManager,
-            IZipClient zipClient,
             IJsonSerializer jsonSerializer,
             IAuthorizationContext authorizationContext,
-            IImageProcessor imageProcessor,
             INetworkManager networkManager,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerfactory)
         {
             HttpClient = httpClient;
             ServerConfigurationManager = serverConfigurationManager;
@@ -105,33 +102,27 @@ namespace MediaBrowser.Api.Playback
             DeviceManager = deviceManager;
             SubtitleEncoder = subtitleEncoder;
             MediaSourceManager = mediaSourceManager;
-            ZipClient = zipClient;
             JsonSerializer = jsonSerializer;
             AuthorizationContext = authorizationContext;
-            ImageProcessor = imageProcessor;
             NetworkManager = networkManager;
-            _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger(nameof(UniversalAudioService));
+            LoggerFactory = loggerfactory;
         }
 
-        protected IHttpClient HttpClient { get; private set; }
-        protected IServerConfigurationManager ServerConfigurationManager { get; private set; }
-        protected IUserManager UserManager { get; private set; }
-        protected ILibraryManager LibraryManager { get; private set; }
-        protected IIsoManager IsoManager { get; private set; }
-        protected IMediaEncoder MediaEncoder { get; private set; }
-        protected IFileSystem FileSystem { get; private set; }
-        protected IDlnaManager DlnaManager { get; private set; }
-        protected IDeviceManager DeviceManager { get; private set; }
-        protected ISubtitleEncoder SubtitleEncoder { get; private set; }
-        protected IMediaSourceManager MediaSourceManager { get; private set; }
-        protected IZipClient ZipClient { get; private set; }
-        protected IJsonSerializer JsonSerializer { get; private set; }
-        protected IAuthorizationContext AuthorizationContext { get; private set; }
-        protected IImageProcessor ImageProcessor { get; private set; }
-        protected INetworkManager NetworkManager { get; private set; }
-        private ILoggerFactory _loggerFactory;
-        private ILogger _logger;
+        protected IHttpClient HttpClient { get; }
+        protected IServerConfigurationManager ServerConfigurationManager { get; }
+        protected IUserManager UserManager { get; }
+        protected ILibraryManager LibraryManager { get; }
+        protected IIsoManager IsoManager { get; }
+        protected IMediaEncoder MediaEncoder { get; }
+        protected IFileSystem FileSystem { get; }
+        protected IDlnaManager DlnaManager { get; }
+        protected IDeviceManager DeviceManager { get; }
+        protected ISubtitleEncoder SubtitleEncoder { get; }
+        protected IMediaSourceManager MediaSourceManager { get; }
+        protected IJsonSerializer JsonSerializer { get; }
+        protected IAuthorizationContext AuthorizationContext { get; }
+        protected INetworkManager NetworkManager { get; }
+        protected ILoggerFactory LoggerFactory { get; }
 
         public Task<object> Get(GetUniversalAudioStream request)
         {
@@ -242,7 +233,17 @@ namespace MediaBrowser.Api.Playback
 
             AuthorizationContext.GetAuthorizationInfo(Request).DeviceId = request.DeviceId;
 
-            var mediaInfoService = new MediaInfoService(MediaSourceManager, DeviceManager, LibraryManager, ServerConfigurationManager, NetworkManager, MediaEncoder, UserManager, JsonSerializer, AuthorizationContext, _loggerFactory)
+            var mediaInfoService = new MediaInfoService(
+                MediaSourceManager,
+                DeviceManager,
+                LibraryManager,
+                ServerConfigurationManager,
+                NetworkManager,
+                MediaEncoder,
+                UserManager,
+                JsonSerializer,
+                AuthorizationContext,
+                LoggerFactory.CreateLogger<MediaInfoService>())
             {
                 Request = Request
             };
@@ -360,6 +361,7 @@ namespace MediaBrowser.Api.Playback
                 {
                     return await service.Head(newRequest).ConfigureAwait(false);
                 }
+
                 return await service.Get(newRequest).ConfigureAwait(false);
             }
         }

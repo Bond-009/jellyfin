@@ -12,7 +12,6 @@ namespace MediaBrowser.Api.LiveTv
 {
     public class ProgressiveFileCopier : IAsyncStreamWriter, IHasHeaders
     {
-        private readonly ILogger _logger;
         private readonly string _path;
         private readonly Dictionary<string, string> _outputHeaders;
 
@@ -21,19 +20,17 @@ namespace MediaBrowser.Api.LiveTv
         private readonly IDirectStreamProvider _directStreamProvider;
         private IStreamHelper _streamHelper;
 
-        public ProgressiveFileCopier(IStreamHelper streamHelper, string path, Dictionary<string, string> outputHeaders, ILogger logger)
+        public ProgressiveFileCopier(IStreamHelper streamHelper, string path, Dictionary<string, string> outputHeaders)
         {
             _path = path;
             _outputHeaders = outputHeaders;
-            _logger = logger;
             _streamHelper = streamHelper;
         }
 
-        public ProgressiveFileCopier(IDirectStreamProvider directStreamProvider, IStreamHelper streamHelper, Dictionary<string, string> outputHeaders, ILogger logger)
+        public ProgressiveFileCopier(IDirectStreamProvider directStreamProvider, IStreamHelper streamHelper, Dictionary<string, string> outputHeaders)
         {
             _directStreamProvider = directStreamProvider;
             _outputHeaders = outputHeaders;
-            _logger = logger;
             _streamHelper = streamHelper;
         }
 

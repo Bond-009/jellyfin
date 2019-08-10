@@ -762,7 +762,7 @@ namespace MediaBrowser.Api.LiveTv
                 [HeaderNames.ContentType] = Model.Net.MimeTypes.GetMimeType(path)
             };
 
-            return new ProgressiveFileCopier(_streamHelper, path, outputHeaders, Logger)
+            return new ProgressiveFileCopier(_streamHelper, path, outputHeaders)
             {
                 AllowEndOfFile = false
             };
@@ -785,7 +785,7 @@ namespace MediaBrowser.Api.LiveTv
                 [HeaderNames.ContentType] = Model.Net.MimeTypes.GetMimeType("file." + request.Container)
             };
 
-            return new ProgressiveFileCopier(directStreamProvider, _streamHelper, outputHeaders, Logger)
+            return new ProgressiveFileCopier(directStreamProvider, _streamHelper, outputHeaders)
             {
                 AllowEndOfFile = false
             };

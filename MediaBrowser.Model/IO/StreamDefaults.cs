@@ -8,11 +8,11 @@ namespace MediaBrowser.Model.IO
         /// <summary>
         /// The default copy to buffer size
         /// </summary>
-        public const int DefaultCopyToBufferSize = 81920;
+        public const int CopyToBufferSize = 81920;
 
         /// <summary>
         /// The default file stream buffer size
         /// </summary>
-        public const int DefaultFileStreamBufferSize = 81920;
+        public const int FileStreamBufferSize = 4096;
     }
 }

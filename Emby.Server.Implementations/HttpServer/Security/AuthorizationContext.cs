@@ -68,6 +68,7 @@ namespace Emby.Server.Implementations.HttpServer.Security
             {
                 token = httpReq.Headers["X-MediaBrowser-Token"];
             }
+
             if (string.IsNullOrEmpty(token))
             {
                 token = httpReq.QueryString["api_key"];
@@ -113,7 +114,6 @@ namespace Emby.Server.Implementations.HttpServer.Security
                     {
                         info.Device = tokenInfo.DeviceName;
                     }
-
                     else if (!string.Equals(info.Device, tokenInfo.DeviceName, StringComparison.OrdinalIgnoreCase))
                     {
                         if (allowTokenInfoUpdate)
@@ -158,6 +158,7 @@ namespace Emby.Server.Implementations.HttpServer.Security
                         _authRepo.Update(tokenInfo);
                     }
                 }
+
                 httpReq.Items["OriginalAuthenticationInfo"] = tokenInfo;
             }
 
@@ -190,12 +191,18 @@ namespace Emby.Server.Implementations.HttpServer.Security
         /// <returns>Dictionary{System.StringSystem.String}.</returns>
         private Dictionary<string, string> GetAuthorization(string authorizationHeader)
         {
-            if (authorizationHeader == null) return null;
+            if (authorizationHeader == null)
+            {
+                return null;
+            }
 
             var parts = authorizationHeader.Split(new[] { ' ' }, 2);
 
             // There should be at least to parts
-            if (parts.Length != 2) return null;
+            if (parts.Length != 2)
+            {
+                return null;
+            }
 
             var acceptedNames = new[] { "MediaBrowser", "Emby" };
 

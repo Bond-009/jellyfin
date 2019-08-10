@@ -74,7 +74,8 @@ namespace Emby.Server.Implementations.HttpServer.Security
                 !string.IsNullOrEmpty(auth.Client) &&
                 !string.IsNullOrEmpty(auth.Device))
             {
-                _sessionManager.LogSessionActivity(auth.Client,
+                _sessionManager.LogSessionActivity(
+                    auth.Client,
                     auth.Version,
                     auth.DeviceId,
                     auth.Device,
@@ -129,6 +130,7 @@ namespace Emby.Server.Implementations.HttpServer.Security
             {
                 return true;
             }
+
             if (authAttribtues.AllowLocalOnly && request.IsLocal)
             {
                 return true;
@@ -222,16 +224,6 @@ namespace Emby.Server.Implementations.HttpServer.Security
             {
                 throw new SecurityException("Access token is invalid or expired.");
             }
-
-            //if (!string.IsNullOrEmpty(info.UserId))
-            //{
-            //    var user = _userManager.GetUserById(info.UserId);
-
-            //    if (user == null || user.Configuration.IsDisabled)
-            //    {
-            //        throw new SecurityException("User account has been disabled.");
-            //    }
-            //}
         }
     }
 }

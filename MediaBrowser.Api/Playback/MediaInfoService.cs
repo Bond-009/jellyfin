@@ -87,7 +87,7 @@ namespace MediaBrowser.Api.Playback
             IUserManager userManager,
             IJsonSerializer json,
             IAuthorizationContext authContext,
-            ILoggerFactory loggerFactory)
+            ILogger<MediaInfoService> logger)
         {
             _mediaSourceManager = mediaSourceManager;
             _deviceManager = deviceManager;
@@ -98,7 +98,7 @@ namespace MediaBrowser.Api.Playback
             _userManager = userManager;
             _json = json;
             _authContext = authContext;
-            _logger = loggerFactory.CreateLogger(nameof(MediaInfoService));
+            _logger = logger;
         }
 
         public object Get(GetBitrateTestBytes request)

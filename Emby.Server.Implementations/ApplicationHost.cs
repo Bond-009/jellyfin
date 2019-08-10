@@ -724,7 +724,7 @@ namespace Emby.Server.Implementations
             ProcessFactory = new ProcessFactory();
             serviceCollection.AddSingleton(ProcessFactory);
 
-            ApplicationHost.StreamHelper = new StreamHelper();
+            StreamHelper = new StreamHelper();
             serviceCollection.AddSingleton(StreamHelper);
 
             serviceCollection.AddSingleton(typeof(ICryptoProvider), typeof(CryptographyProvider));
@@ -737,7 +737,7 @@ namespace Emby.Server.Implementations
             ZipClient = new ZipClient();
             serviceCollection.AddSingleton(ZipClient);
 
-            HttpResultFactory = new HttpResultFactory(LoggerFactory, FileSystemManager, JsonSerializer, StreamHelper);
+            HttpResultFactory = new HttpResultFactory(LoggerFactory.CreateLogger<HttpResultFactory>(), FileSystemManager, JsonSerializer, StreamHelper);
             serviceCollection.AddSingleton(HttpResultFactory);
 
             serviceCollection.AddSingleton<IServerApplicationHost>(this);

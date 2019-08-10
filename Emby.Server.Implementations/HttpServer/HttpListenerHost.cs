@@ -69,6 +69,8 @@ namespace Emby.Server.Implementations.HttpServer
             ResponseFilters = Array.Empty<Action<IRequest, HttpResponse, object>>();
         }
 
+        public event EventHandler<GenericEventArgs<IWebSocketConnection>> WebSocketConnected;
+
         public Action<IRequest, HttpResponse, object>[] ResponseFilters { get; set; }
 
         public static HttpListenerHost Instance { get; protected set; }
@@ -78,8 +80,6 @@ namespace Emby.Server.Implementations.HttpServer
         public string GlobalResponse { get; set; }
 
         public ServiceController ServiceController { get; private set; }
-
-        public event EventHandler<GenericEventArgs<IWebSocketConnection>> WebSocketConnected;
 
         public object CreateInstance(Type type)
         {

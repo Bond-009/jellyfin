@@ -152,7 +152,7 @@ namespace MediaBrowser.Api.Playback.Progressive
                     // TODO: Don't hardcode this
                     outputHeaders[HeaderNames.ContentType] = Model.Net.MimeTypes.GetMimeType("file.ts");
 
-                    return new ProgressiveFileCopier(state.DirectStreamProvider, outputHeaders, null, Logger, CancellationToken.None)
+                    return new ProgressiveFileCopier(state.DirectStreamProvider, outputHeaders, null)
                     {
                         AllowEndOfFile = false
                     };
@@ -198,7 +198,7 @@ namespace MediaBrowser.Api.Playback.Progressive
                         };
 
 
-                        return new ProgressiveFileCopier(FileSystem, state.MediaPath, outputHeaders, null, Logger, CancellationToken.None)
+                        return new ProgressiveFileCopier(FileSystem, state.MediaPath, outputHeaders, null)
                         {
                             AllowEndOfFile = false
                         };
@@ -305,7 +305,7 @@ namespace MediaBrowser.Api.Playback.Progressive
             {
                 using (response)
                 {
-                    return ResultFactory.GetResult(null, new byte[] { }, response.ContentType, responseHeaders);
+                    return ResultFactory.GetResult(null, Array.Empty<byte>(), response.ContentType, responseHeaders);
                 }
             }
 
@@ -395,7 +395,7 @@ namespace MediaBrowser.Api.Playback.Progressive
                     outputHeaders[item.Key] = item.Value;
                 }
 
-                return new ProgressiveFileCopier(FileSystem, outputPath, outputHeaders, job, Logger, CancellationToken.None);
+                return new ProgressiveFileCopier(FileSystem, outputPath, outputHeaders, job, CancellationToken.None);
             }
             finally
             {

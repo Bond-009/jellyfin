@@ -2,7 +2,6 @@ using System;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
-using MediaBrowser.Controller.Security;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Model.Services;
 
@@ -29,27 +28,11 @@ namespace Emby.Server.Implementations.HttpServer.Security
             return _sessionManager.LogSessionActivity(authorization.Client, authorization.Version, authorization.DeviceId, authorization.Device, requestContext.RemoteIp, user);
         }
 
-        private AuthenticationInfo GetTokenInfo(IRequest request)
-        {
-            request.Items.TryGetValue("OriginalAuthenticationInfo", out var info);
-            return info as AuthenticationInfo;
-        }
-
-        public SessionInfo GetSession(object requestContext)
-        {
-            return GetSession((IRequest)requestContext);
-        }
-
         public User GetUser(IRequest requestContext)
         {
             var session = GetSession(requestContext);
 
             return session == null || session.UserId.Equals(Guid.Empty) ? null : _userManager.GetUserById(session.UserId);
-        }
-
-        public User GetUser(object requestContext)
-        {
-            return GetUser((IRequest)requestContext);
         }
     }
 }

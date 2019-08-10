@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -7,7 +8,6 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
 using MediaBrowser.Model.System;
-using Microsoft.Extensions.Logging;
 using OperatingSystem = MediaBrowser.Common.System.OperatingSystem;
 
 namespace MediaBrowser.Api.Playback.Progressive
@@ -16,37 +16,41 @@ namespace MediaBrowser.Api.Playback.Progressive
     {
         private readonly IFileSystem _fileSystem;
         private readonly TranscodingJob _job;
-        private readonly ILogger _logger;
         private readonly string _path;
         private readonly CancellationToken _cancellationToken;
         private readonly Dictionary<string, string> _outputHeaders;
-
-        const int StreamCopyToBufferSize = 81920;
-
-        private long _bytesWritten = 0;
-        public long StartPosition { get; set; }
-        public bool AllowEndOfFile = true;
-
         private readonly IDirectStreamProvider _directStreamProvider;
 
-        public ProgressiveFileCopier(IFileSystem fileSystem, string path, Dictionary<string, string> outputHeaders, TranscodingJob job, ILogger logger, CancellationToken cancellationToken)
+        private long _bytesWritten = 0;
+
+        public ProgressiveFileCopier(
+            IFileSystem fileSystem,
+            string path,
+            Dictionary<string, string> outputHeaders,
+            TranscodingJob job,
+            CancellationToken cancellationToken = default)
         {
             _fileSystem = fileSystem;
             _path = path;
             _outputHeaders = outputHeaders;
             _job = job;
-            _logger = logger;
             _cancellationToken = cancellationToken;
         }
 
-        public ProgressiveFileCopier(IDirectStreamProvider directStreamProvider, Dictionary<string, string> outputHeaders, TranscodingJob job, ILogger logger, CancellationToken cancellationToken)
+        public ProgressiveFileCopier(
+            IDirectStreamProvider directStreamProvider,
+            Dictionary<string, string> outputHeaders,
+            TranscodingJob job,
+            CancellationToken cancellationToken = default)
         {
             _directStreamProvider = directStreamProvider;
             _outputHeaders = outputHeaders;
             _job = job;
-            _logger = logger;
             _cancellationToken = cancellationToken;
         }
+
+        public long StartPosition { get; set; }
+        public bool AllowEndOfFile { get; set; } = true;
 
         public IDictionary<string, string> Headers => _outputHeaders;
 
@@ -107,6 +111,7 @@ namespace MediaBrowser.Api.Playback.Progressive
                             {
                                 eofCount++;
                             }
+
                             await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                         }
                         else
@@ -127,56 +132,70 @@ namespace MediaBrowser.Api.Playback.Progressive
 
         private async Task<int> CopyToInternalAsyncWithSyncRead(Stream source, Stream destination, CancellationToken cancellationToken)
         {
-            var array = new byte[StreamCopyToBufferSize];
-            int bytesRead;
-            int totalBytesRead = 0;
-
-            while ((bytesRead = source.Read(array, 0, array.Length)) != 0)
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(StreamDefaults.CopyToBufferSize);
+            try
             {
-                var bytesToWrite = bytesRead;
+                int bytesRead;
+                int totalBytesRead = 0;
 
-                if (bytesToWrite > 0)
+                while ((bytesRead = source.Read(buffer, 0, buffer.Length)) != 0)
                 {
-                    await destination.WriteAsync(array, 0, Convert.ToInt32(bytesToWrite), cancellationToken).ConfigureAwait(false);
+                    var bytesToWrite = bytesRead;
 
-                    _bytesWritten += bytesRead;
-                    totalBytesRead += bytesRead;
-
-                    if (_job != null)
+                    if (bytesToWrite > 0)
                     {
-                        _job.BytesDownloaded = Math.Max(_job.BytesDownloaded ?? _bytesWritten, _bytesWritten);
+                        await destination.WriteAsync(buffer, 0, Convert.ToInt32(bytesToWrite), cancellationToken).ConfigureAwait(false);
+
+                        _bytesWritten += bytesRead;
+                        totalBytesRead += bytesRead;
+
+                        if (_job != null)
+                        {
+                            _job.BytesDownloaded = Math.Max(_job.BytesDownloaded ?? _bytesWritten, _bytesWritten);
+                        }
                     }
                 }
-            }
 
-            return totalBytesRead;
+                return totalBytesRead;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
 
         private async Task<int> CopyToInternalAsync(Stream source, Stream destination, CancellationToken cancellationToken)
         {
-            var array = new byte[StreamCopyToBufferSize];
-            int bytesRead;
-            int totalBytesRead = 0;
-
-            while ((bytesRead = await source.ReadAsync(array, 0, array.Length, cancellationToken).ConfigureAwait(false)) != 0)
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(StreamDefaults.CopyToBufferSize);
+            try
             {
-                var bytesToWrite = bytesRead;
+                int bytesRead;
+                int totalBytesRead = 0;
 
-                if (bytesToWrite > 0)
+                while ((bytesRead = await source.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false)) != 0)
                 {
-                    await destination.WriteAsync(array, 0, Convert.ToInt32(bytesToWrite), cancellationToken).ConfigureAwait(false);
+                    var bytesToWrite = bytesRead;
 
-                    _bytesWritten += bytesRead;
-                    totalBytesRead += bytesRead;
-
-                    if (_job != null)
+                    if (bytesToWrite > 0)
                     {
-                        _job.BytesDownloaded = Math.Max(_job.BytesDownloaded ?? _bytesWritten, _bytesWritten);
+                        await destination.WriteAsync(buffer, 0, Convert.ToInt32(bytesToWrite), cancellationToken).ConfigureAwait(false);
+
+                        _bytesWritten += bytesRead;
+                        totalBytesRead += bytesRead;
+
+                        if (_job != null)
+                        {
+                            _job.BytesDownloaded = Math.Max(_job.BytesDownloaded ?? _bytesWritten, _bytesWritten);
+                        }
                     }
                 }
-            }
 
-            return totalBytesRead;
+                return totalBytesRead;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
     }
 }

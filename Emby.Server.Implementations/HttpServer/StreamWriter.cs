@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
 using Microsoft.Net.Http.Headers;
 
@@ -18,22 +19,9 @@ namespace Emby.Server.Implementations.HttpServer
         /// Gets or sets the source stream.
         /// </summary>
         /// <value>The source stream.</value>
-        private Stream SourceStream { get; set; }
+        private Stream _sourceStream;
 
-        private byte[] SourceBytes { get; set; }
-
-        /// <summary>
-        /// The _options
-        /// </summary>
-        private readonly IDictionary<string, string> _options = new Dictionary<string, string>();
-        /// <summary>
-        /// Gets the options.
-        /// </summary>
-        /// <value>The options.</value>
-        public IDictionary<string, string> Headers => _options;
-
-        public Action OnComplete { get; set; }
-        public Action OnError { get; set; }
+        private byte[] _sourceBytes;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamWriter" /> class.
@@ -48,7 +36,7 @@ namespace Emby.Server.Implementations.HttpServer
                 throw new ArgumentNullException(nameof(contentType));
             }
 
-            SourceStream = source;
+            _sourceStream = source;
 
             Headers["Content-Type"] = contentType;
 
@@ -72,45 +60,48 @@ namespace Emby.Server.Implementations.HttpServer
                 throw new ArgumentNullException(nameof(contentType));
             }
 
-            SourceBytes = source;
+            _sourceBytes = source;
 
             Headers[HeaderNames.ContentLength] = contentLength.ToString(CultureInfo.InvariantCulture);
             Headers[HeaderNames.ContentType] = contentType;
         }
 
+        /// <summary>
+        /// Gets the options.
+        /// </summary>
+        /// <value>The options.</value>
+        public IDictionary<string, string> Headers { get; } = new Dictionary<string, string>();
+
+        public Action OnComplete { get; set; }
+        public Action OnError { get; set; }
+
         public async Task WriteToAsync(Stream responseStream, CancellationToken cancellationToken)
         {
             try
             {
-                var bytes = SourceBytes;
+                var bytes = _sourceBytes;
 
                 if (bytes != null)
                 {
-                    await responseStream.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
+                    await responseStream.WriteAsync(bytes, 0, bytes.Length, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
-                    using (var src = SourceStream)
+                    using (var src = _sourceStream)
                     {
-                        await src.CopyToAsync(responseStream).ConfigureAwait(false);
+                        await src.CopyToAsync(responseStream, StreamDefaults.CopyToBufferSize, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
             catch
             {
-                if (OnError != null)
-                {
-                    OnError();
-                }
+                OnError?.Invoke();
 
                 throw;
             }
             finally
             {
-                if (OnComplete != null)
-                {
-                    OnComplete();
-                }
+                OnComplete?.Invoke();
             }
         }
     }

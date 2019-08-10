@@ -9,16 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 
 namespace Emby.Server.Implementations.HttpServer
 {
     public class FileWriter : IHttpResult
     {
-        private static readonly CultureInfo UsCulture = CultureInfo.ReadOnly(new CultureInfo("en-US"));
-
         private static readonly string[] _skipLogExtensions = {
             ".js",
             ".html",
@@ -125,12 +123,12 @@ namespace Emby.Server.Implementations.HttpServer
 
                         if (!string.IsNullOrEmpty(vals[0]))
                         {
-                            start = long.Parse(vals[0], UsCulture);
+                            start = long.Parse(vals[0], CultureInfo.InvariantCulture);
                         }
 
                         if (!string.IsNullOrEmpty(vals[1]))
                         {
-                            end = long.Parse(vals[1], UsCulture);
+                            end = long.Parse(vals[1], CultureInfo.InvariantCulture);
                         }
 
                         _requestedRanges.Add(new KeyValuePair<long, long?>(start, end));
@@ -242,7 +240,7 @@ namespace Emby.Server.Implementations.HttpServer
                 }
                 else
                 {
-                    await fs.CopyToAsync(stream, StreamDefaults.DefaultCopyToBufferSize, cancellationToken).ConfigureAwait(false);
+                    await fs.CopyToAsync(stream, StreamDefaults.CopyToBufferSize, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

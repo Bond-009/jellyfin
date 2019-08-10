@@ -10,7 +10,6 @@ namespace Emby.Server.Implementations.HttpServer
 {
     public class ResponseFilter
     {
-        private static readonly CultureInfo _usCulture = CultureInfo.ReadOnly(new CultureInfo("en-US"));
         private readonly ILogger _logger;
 
         public ResponseFilter(ILogger logger)
@@ -31,13 +30,13 @@ namespace Emby.Server.Implementations.HttpServer
             res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
             res.Headers.Add("Access-Control-Allow-Origin", "*");
 
-            if (dto is Exception exception)
+            if (dto is Exception ex)
             {
-                _logger.LogError(exception, "Error processing request for {RawUrl}", req.RawUrl);
+                _logger.LogError(ex, "Error processing request for {RawUrl}", req.RawUrl);
 
-                if (!string.IsNullOrEmpty(exception.Message))
+                if (!string.IsNullOrEmpty(ex.Message))
                 {
-                    var error = exception.Message.Replace(Environment.NewLine, " ");
+                    var error = ex.Message.Replace(Environment.NewLine, " ");
                     error = RemoveControlCharacters(error);
 
                     res.Headers.Add("X-Application-Error-Code", error);
@@ -55,7 +54,7 @@ namespace Emby.Server.Implementations.HttpServer
                 if (hasHeaders.Headers.TryGetValue(HeaderNames.ContentLength, out string contentLength)
                     && !string.IsNullOrEmpty(contentLength))
                 {
-                    var length = long.Parse(contentLength, _usCulture);
+                    var length = long.Parse(contentLength, CultureInfo.InvariantCulture);
 
                     if (length > 0)
                     {

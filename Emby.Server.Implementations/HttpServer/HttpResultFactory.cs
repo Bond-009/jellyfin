@@ -4,13 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using Emby.Server.Implementations.Services;
-using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Serialization;
@@ -39,12 +38,16 @@ namespace Emby.Server.Implementations.HttpServer
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpResultFactory" /> class.
         /// </summary>
-        public HttpResultFactory(ILoggerFactory loggerfactory, IFileSystem fileSystem, IJsonSerializer jsonSerializer, IStreamHelper streamHelper)
+        public HttpResultFactory(
+            ILogger<HttpResultFactory> logger,
+            IFileSystem fileSystem,
+            IJsonSerializer jsonSerializer,
+            IStreamHelper streamHelper)
         {
+            _logger = logger;
             _fileSystem = fileSystem;
             _jsonSerializer = jsonSerializer;
             _streamHelper = streamHelper;
-            _logger = loggerfactory.CreateLogger("HttpResultFactory");
         }
 
         /// <summary>
@@ -55,29 +58,23 @@ namespace Emby.Server.Implementations.HttpServer
         /// <param name="responseHeaders">The response headers.</param>
         /// <returns>System.Object.</returns>
         public object GetResult(IRequest requestContext, byte[] content, string contentType, IDictionary<string, string> responseHeaders = null)
-        {
-            return GetHttpResult(requestContext, content, contentType, true, responseHeaders);
-        }
+            => GetHttpResult(requestContext, content, contentType, true, responseHeaders);
 
         public object GetResult(string content, string contentType, IDictionary<string, string> responseHeaders = null)
-        {
-            return GetHttpResult(null, content, contentType, true, responseHeaders);
-        }
+            => GetHttpResult(null, content, contentType, true, responseHeaders);
 
         public object GetResult(IRequest requestContext, Stream content, string contentType, IDictionary<string, string> responseHeaders = null)
-        {
-            return GetHttpResult(requestContext, content, contentType, true, responseHeaders);
-        }
+            => GetHttpResult(requestContext, content, contentType, true, responseHeaders);
 
         public object GetResult(IRequest requestContext, string content, string contentType, IDictionary<string, string> responseHeaders = null)
-        {
-            return GetHttpResult(requestContext, content, contentType, true, responseHeaders);
-        }
+            => GetHttpResult(requestContext, content, contentType, true, responseHeaders);
 
         public object GetRedirectResult(string url)
         {
-            var responseHeaders = new Dictionary<string, string>();
-            responseHeaders[HeaderNames.Location] = url;
+            var responseHeaders = new Dictionary<string, string>()
+            {
+                { HeaderNames.Location, url }
+            };
 
             var result = new HttpResult(Array.Empty<byte>(), "text/plain", HttpStatusCode.Redirect);
 
@@ -98,7 +95,7 @@ namespace Emby.Server.Implementations.HttpServer
                 responseHeaders = new Dictionary<string, string>();
             }
 
-            if (addCachePrevention && !responseHeaders.TryGetValue(HeaderNames.Expires, out string expires))
+            if (addCachePrevention && !responseHeaders.ContainsKey(HeaderNames.Expires))
             {
                 responseHeaders[HeaderNames.Expires] = "0";
             }
@@ -144,7 +141,7 @@ namespace Emby.Server.Implementations.HttpServer
                 responseHeaders = new Dictionary<string, string>();
             }
 
-            if (addCachePrevention && !responseHeaders.TryGetValue(HeaderNames.Expires, out string _))
+            if (addCachePrevention && !responseHeaders.ContainsKey(HeaderNames.Expires))
             {
                 responseHeaders[HeaderNames.Expires] = "0";
             }
@@ -188,7 +185,7 @@ namespace Emby.Server.Implementations.HttpServer
                 responseHeaders = new Dictionary<string, string>();
             }
 
-            if (addCachePrevention && !responseHeaders.TryGetValue(HeaderNames.Expires, out string _))
+            if (addCachePrevention && !responseHeaders.ContainsKey(HeaderNames.Expires))
             {
                 responseHeaders[HeaderNames.Expires] = "0";
             }
@@ -255,10 +252,14 @@ namespace Emby.Server.Implementations.HttpServer
                 //    return "br";
 
                 if (acceptEncoding.IndexOf("deflate", StringComparison.OrdinalIgnoreCase) != -1)
+                {
                     return "deflate";
+                }
 
                 if (acceptEncoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) != -1)
+                {
                     return "gzip";
+                }
             }
 
             return null;
@@ -315,7 +316,8 @@ namespace Emby.Server.Implementations.HttpServer
             return GetHttpResult(request, ms, contentType, true, responseHeaders);
         }
 
-        private IHasHeaders GetCompressedResult(byte[] content,
+        private IHasHeaders GetCompressedResult(
+            byte[] content,
             string requestedCompressionType,
             IDictionary<string, string> responseHeaders,
             bool isHeadRequest,
@@ -392,9 +394,11 @@ namespace Emby.Server.Implementations.HttpServer
         {
             using (var ms = new MemoryStream())
             {
-                var xwSettings = new XmlWriterSettings();
-                xwSettings.Encoding = new UTF8Encoding(false);
-                xwSettings.OmitXmlDeclaration = false;
+                var xwSettings = new XmlWriterSettings()
+                {
+                    Encoding = new UTF8Encoding(false),
+                    OmitXmlDeclaration = false
+                };
 
                 using (var xw = XmlWriter.Create(ms, xwSettings))
                 {
@@ -415,7 +419,7 @@ namespace Emby.Server.Implementations.HttpServer
         /// </summary>
         private object GetCachedResult(IRequest requestContext, IDictionary<string, string> responseHeaders, StaticResultOptions options)
         {
-            bool noCache = (requestContext.Headers[HeaderNames.CacheControl].ToString()).IndexOf("no-cache", StringComparison.OrdinalIgnoreCase) != -1;
+            bool noCache = requestContext.Headers[HeaderNames.CacheControl].ToString().IndexOf("no-cache", StringComparison.OrdinalIgnoreCase) != -1;
             AddCachingHeaders(responseHeaders, options.CacheDuration, noCache, options.DateLastModified);
 
             if (!noCache)
@@ -437,7 +441,8 @@ namespace Emby.Server.Implementations.HttpServer
             return null;
         }
 
-        public Task<object> GetStaticFileResult(IRequest requestContext,
+        public Task<object> GetStaticFileResult(
+            IRequest requestContext,
             string path,
             FileShareMode fileShare = FileShareMode.Read)
         {
@@ -460,7 +465,7 @@ namespace Emby.Server.Implementations.HttpServer
 
             if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException(nameof(path));
+                throw new ArgumentException("Path can't be empty", nameof(options));
             }
 
             if (fileShare != FileShareMode.Read && fileShare != FileShareMode.ReadWrite)
@@ -571,7 +576,7 @@ namespace Emby.Server.Implementations.HttpServer
 
             if (!string.IsNullOrWhiteSpace(rangeHeader) && totalContentLength.HasValue)
             {
-                var hasHeaders = new RangeRequestWriter(rangeHeader, totalContentLength.Value, stream, contentType, isHeadRequest, _logger)
+                var hasHeaders = new RangeRequestWriter(rangeHeader, totalContentLength.Value, stream, contentType, isHeadRequest)
                 {
                     OnComplete = options.OnComplete
                 };
@@ -608,8 +613,11 @@ namespace Emby.Server.Implementations.HttpServer
         /// <summary>
         /// Adds the caching responseHeaders.
         /// </summary>
-        private void AddCachingHeaders(IDictionary<string, string> responseHeaders, TimeSpan? cacheDuration,
-            bool noCache, DateTime? lastModifiedDate)
+        private void AddCachingHeaders(
+            IDictionary<string, string> responseHeaders,
+            TimeSpan? cacheDuration,
+            bool noCache,
+            DateTime? lastModifiedDate)
         {
             if (noCache)
             {
@@ -676,9 +684,8 @@ namespace Emby.Server.Implementations.HttpServer
             return false;
         }
 
-
         /// <summary>
-        /// When the browser sends the IfModifiedDate, it's precision is limited to seconds, so this will account for that
+        /// When the browser sends the IfModifiedDate, it's precision is limited to seconds, so this will account for that.
         /// </summary>
         /// <param name="date">The date.</param>
         /// <returns>DateTime.</returns>

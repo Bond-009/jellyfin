@@ -7,7 +7,6 @@ using Emby.Server.Implementations.Net;
 using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Net;
 using MediaBrowser.Model.Serialization;
-using MediaBrowser.Model.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using UtfUnknown;
@@ -15,31 +14,72 @@ using UtfUnknown;
 namespace Emby.Server.Implementations.HttpServer
 {
     /// <summary>
-    /// Class WebSocketConnection
+    /// Class WebSocketConnection.
     /// </summary>
     public class WebSocketConnection : IWebSocketConnection
     {
         public event EventHandler<EventArgs> Closed;
 
         /// <summary>
-        /// The _socket
+        /// The _socket.
         /// </summary>
         private readonly IWebSocket _socket;
 
         /// <summary>
-        /// The _remote end point
-        /// </summary>
-        public string RemoteEndPoint { get; private set; }
-
-        /// <summary>
-        /// The logger
+        /// The logger.
         /// </summary>
         private readonly ILogger _logger;
 
         /// <summary>
-        /// The _json serializer
+        /// The _json serializer.
         /// </summary>
         private readonly IJsonSerializer _jsonSerializer;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WebSocketConnection" /> class.
+        /// </summary>
+        /// <param name="socket">The socket.</param>
+        /// <param name="remoteEndPoint">The remote end point.</param>
+        /// <param name="jsonSerializer">The json serializer.</param>
+        /// <param name="logger">The logger.</param>
+        /// <exception cref="ArgumentNullException">socket</exception>
+        public WebSocketConnection(IWebSocket socket, string remoteEndPoint, IJsonSerializer jsonSerializer, ILogger logger)
+        {
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
+
+            if (string.IsNullOrEmpty(remoteEndPoint))
+            {
+                throw new ArgumentException("Remote endpoint can't be empty.", nameof(remoteEndPoint));
+            }
+
+            if (jsonSerializer == null)
+            {
+                throw new ArgumentNullException(nameof(jsonSerializer));
+            }
+
+            if (logger == null)
+            {
+                throw new ArgumentNullException(nameof(logger));
+            }
+
+            Id = Guid.NewGuid();
+            _jsonSerializer = jsonSerializer;
+            _socket = socket;
+            _socket.OnReceiveBytes = OnReceiveInternal;
+
+            RemoteEndPoint = remoteEndPoint;
+            _logger = logger;
+
+            socket.Closed += OnSocketClosed;
+        }
+
+        /// <summary>
+        /// The _remote end point.
+        /// </summary>
+        public string RemoteEndPoint { get; }
 
         /// <summary>
         /// Gets or sets the receive action.
@@ -64,6 +104,7 @@ namespace Emby.Server.Implementations.HttpServer
         /// </summary>
         /// <value>The URL.</value>
         public string Url { get; set; }
+
         /// <summary>
         /// Gets or sets the query string.
         /// </summary>
@@ -71,44 +112,12 @@ namespace Emby.Server.Implementations.HttpServer
         public IQueryCollection QueryString { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WebSocketConnection" /> class.
+        /// Gets the state.
         /// </summary>
-        /// <param name="socket">The socket.</param>
-        /// <param name="remoteEndPoint">The remote end point.</param>
-        /// <param name="jsonSerializer">The json serializer.</param>
-        /// <param name="logger">The logger.</param>
-        /// <exception cref="ArgumentNullException">socket</exception>
-        public WebSocketConnection(IWebSocket socket, string remoteEndPoint, IJsonSerializer jsonSerializer, ILogger logger)
-        {
-            if (socket == null)
-            {
-                throw new ArgumentNullException(nameof(socket));
-            }
-            if (string.IsNullOrEmpty(remoteEndPoint))
-            {
-                throw new ArgumentNullException(nameof(remoteEndPoint));
-            }
-            if (jsonSerializer == null)
-            {
-                throw new ArgumentNullException(nameof(jsonSerializer));
-            }
-            if (logger == null)
-            {
-                throw new ArgumentNullException(nameof(logger));
-            }
+        /// <value>The state.</value>
+        public WebSocketState State => _socket.State;
 
-            Id = Guid.NewGuid();
-            _jsonSerializer = jsonSerializer;
-            _socket = socket;
-            _socket.OnReceiveBytes = OnReceiveInternal;
-
-            RemoteEndPoint = remoteEndPoint;
-            _logger = logger;
-
-            socket.Closed += socket_Closed;
-        }
-
-        void socket_Closed(object sender, EventArgs e)
+        private void OnSocketClosed(object sender, EventArgs e)
         {
             Closed?.Invoke(this, EventArgs.Empty);
         }
@@ -221,12 +230,6 @@ namespace Emby.Server.Implementations.HttpServer
 
             return _socket.SendAsync(text, true, cancellationToken);
         }
-
-        /// <summary>
-        /// Gets the state.
-        /// </summary>
-        /// <value>The state.</value>
-        public WebSocketState State => _socket.State;
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
