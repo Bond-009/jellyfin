@@ -8,7 +8,15 @@ namespace MediaBrowser.Model.Configuration
     public class BaseApplicationConfiguration
     {
         /// <summary>
-        /// The number of days we should retain log files
+        /// Initializes a new instance of the <see cref="BaseApplicationConfiguration" /> class.
+        /// </summary>
+        public BaseApplicationConfiguration()
+        {
+            LogFileRetentionDays = 3;
+        }
+
+        /// <summary>
+        /// Gets or sets the number of days we should retain log files.
         /// </summary>
         /// <value>The log file retention days.</value>
         public int LogFileRetentionDays { get; set; }
@@ -24,13 +32,5 @@ namespace MediaBrowser.Model.Configuration
         /// </summary>
         /// <value>The cache path.</value>
         public string CachePath { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="BaseApplicationConfiguration" /> class.
-        /// </summary>
-        public BaseApplicationConfiguration()
-        {
-            LogFileRetentionDays = 3;
-        }
     }
 }

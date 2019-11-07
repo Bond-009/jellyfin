@@ -1,5 +1,8 @@
 namespace MediaBrowser.Model.Dlna
 {
+    /// <summary>
+    /// The profile info for a device.
+    /// </summary>
     public class DeviceProfileInfo
     {
         /// <summary>

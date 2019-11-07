@@ -1,3 +1,5 @@
+#pragma warning disable CS1591
+
 using System;
 using MediaBrowser.Model.Entities;
 
@@ -5,6 +7,12 @@ namespace MediaBrowser.Model.Configuration
 {
     public class MetadataPluginSummary
     {
+        public MetadataPluginSummary()
+        {
+            SupportedImageTypes = Array.Empty<ImageType>();
+            Plugins = Array.Empty<MetadataPlugin>();
+        }
+
         /// <summary>
         /// Gets or sets the type of the item.
         /// </summary>
@@ -22,11 +30,5 @@ namespace MediaBrowser.Model.Configuration
         /// </summary>
         /// <value>The supported image types.</value>
         public ImageType[] SupportedImageTypes { get; set; }
-
-        public MetadataPluginSummary()
-        {
-            SupportedImageTypes = Array.Empty<ImageType>();
-            Plugins = Array.Empty<MetadataPlugin>();
-        }
     }
 }

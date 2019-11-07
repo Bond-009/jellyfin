@@ -3,7 +3,7 @@ using MediaBrowser.Model.Entities;
 namespace MediaBrowser.Model.Dto
 {
     /// <summary>
-    /// Class ImageInfo
+    /// Class ImageInfo.
     /// </summary>
     public class ImageInfo
     {
@@ -20,9 +20,9 @@ namespace MediaBrowser.Model.Dto
         public int? ImageIndex { get; set; }
 
         /// <summary>
-        /// The image tag
+        /// Gets or sets the image tag.
         /// </summary>
-        public string ImageTag;
+        public string ImageTag { get; set; }
 
         /// <summary>
         /// Gets or sets the path.

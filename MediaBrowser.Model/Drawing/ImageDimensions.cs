@@ -1,7 +1,9 @@
+using System.Globalization;
+
 namespace MediaBrowser.Model.Drawing
 {
     /// <summary>
-    /// Struct ImageDimensions
+    /// Struct ImageDimensions.
     /// </summary>
     public struct ImageDimensions
     {
@@ -22,9 +24,14 @@ namespace MediaBrowser.Model.Drawing
             return Width.Equals(size.Width) && Height.Equals(size.Height);
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
-            return string.Format("{0}-{1}", Width, Height);
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}-{1}",
+                Width,
+                Height);
         }
 
         public ImageDimensions(int width, int height)

@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace MediaBrowser.Model.Activity
 {
+    /// <summary>
+    /// An entry in the activity log.
+    /// </summary>
     public class ActivityLogEntry
     {
         /// <summary>
