@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Channels;
 using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Configuration;
@@ -75,7 +76,7 @@ namespace MediaBrowser.Providers.MediaInfo
             }
 
             if (item.SupportsLocalMetadata && video != null && !video.IsPlaceHolder
-                && !video.SubtitleFiles.SequenceEqual(
+                && !video.SubtitleFiles.ScrambledEquals(
                         _subtitleResolver.GetExternalSubtitleFiles(video, directoryService, false), StringComparer.Ordinal))
             {
                 _logger.LogDebug("Refreshing {0} due to external subtitles change.", item.Path);

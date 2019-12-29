@@ -1034,6 +1034,7 @@ namespace Emby.Server.Implementations.Channels
                     _logger.LogDebug("Forcing update due to TrailerTypes {0}", item.Name);
                     forceUpdate = true;
                 }
+
                 trailer.TrailerTypes = info.TrailerTypes.ToArray();
             }
 

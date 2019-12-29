@@ -26,7 +26,6 @@ namespace MediaBrowser.Controller.Providers
             {
                 entries = _fileSystem.GetFileSystemEntries(path).ToArray();
 
-                //_cache.TryAdd(path, entries);
                 _cache[path] = entries;
             }
 

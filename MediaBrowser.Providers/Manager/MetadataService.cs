@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -494,7 +495,7 @@ namespace MediaBrowser.Providers.Manager
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
-                if (currentList.Length != item.Genres.Length || !currentList.OrderBy(i => i).SequenceEqual(item.Genres.OrderBy(i => i), StringComparer.OrdinalIgnoreCase))
+                if (currentList.Length != item.Genres.Length || !currentList.ScrambledEquals(item.Genres, StringComparer.OrdinalIgnoreCase))
                 {
                     updateType = updateType | ItemUpdateType.MetadataEdit;
                 }
@@ -515,7 +516,7 @@ namespace MediaBrowser.Providers.Manager
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
-                if (currentList.Length != item.Studios.Length || !currentList.OrderBy(i => i).SequenceEqual(item.Studios.OrderBy(i => i), StringComparer.OrdinalIgnoreCase))
+                if (currentList.Length != item.Studios.Length || !currentList.ScrambledEquals(item.Studios, StringComparer.OrdinalIgnoreCase))
                 {
                     updateType = updateType | ItemUpdateType.MetadataEdit;
                 }

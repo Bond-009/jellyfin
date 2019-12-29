@@ -173,25 +173,31 @@ namespace Emby.Naming.Video
                 return videos;
             }
 
-            var list = new List<VideoInfo>();
-
             var folderName = Path.GetFileName(Path.GetDirectoryName(videos[0].Files[0].Path));
 
             if (!string.IsNullOrEmpty(folderName)
                 && folderName.Length > 1
                 && videos.All(i => i.Files.Count == 1
-                && IsEligibleForMultiVersion(folderName, i.Files[0].Path))
-                && HaveSameYear(videos))
+                    && IsEligibleForMultiVersion(folderName, i.Files[0].Path))
+                    && HaveSameYear(videos))
             {
-                var ordered = videos.OrderBy(i => i.Name).ToList();
+                var ordered = videos.OrderBy(i => i.Name).ToArray();
+                var mainVideo = ordered[0];
+                mainVideo.Name = folderName;
 
-                list.Add(ordered[0]);
+                int orderedLen = ordered.Length;
+                var alternateVersions = new VideoFileInfo[orderedLen - 1];
+                var extras = mainVideo.Extras;
+                for (int i = 1; i < orderedLen; i++)
+                {
+                    var video = ordered[i];
+                    alternateVersions[i - 1] = video.Files[0];
+                    extras.AddRange(video.Extras);
+                }
 
-                list[0].AlternateVersions = ordered.Skip(1).Select(i => i.Files[0]).ToList();
-                list[0].Name = folderName;
-                list[0].Extras.AddRange(ordered.Skip(1).SelectMany(i => i.Extras));
+                mainVideo.AlternateVersions = alternateVersions;
 
-                return list;
+                return new[] { mainVideo };
             }
 
             return videos;
@@ -202,16 +208,22 @@ namespace Emby.Naming.Video
             return videos.Select(i => i.Year ?? -1).Distinct().Count() < 2;
         }
 
-        private bool IsEligibleForMultiVersion(string folderName, string testFilename)
+        private bool IsEligibleForMultiVersion(string folderName, ReadOnlySpan<char> testFilename)
         {
-            testFilename = Path.GetFileNameWithoutExtension(testFilename) ?? string.Empty;
+            testFilename = Path.GetFileNameWithoutExtension(testFilename);
 
             if (testFilename.StartsWith(folderName, StringComparison.OrdinalIgnoreCase))
             {
-                testFilename = testFilename.Substring(folderName.Length).Trim();
-                return string.IsNullOrEmpty(testFilename)
+                // Fast path if both names are the same
+                if (testFilename.Length == folderName.Length)
+                {
+                    return true;
+                }
+
+                testFilename = testFilename.Slice(folderName.Length).Trim();
+                return testFilename.Length == 0
                     || testFilename[0] == '-'
-                    || string.IsNullOrWhiteSpace(Regex.Replace(testFilename, @"\[([^]]*)\]", string.Empty));
+                    || string.IsNullOrWhiteSpace(Regex.Replace(testFilename.ToString(), @"\[([^]]*)\]", string.Empty));
             }
 
             return false;

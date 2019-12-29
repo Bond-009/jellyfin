@@ -19,7 +19,6 @@ using MediaBrowser.Controller.Sorting;
 using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
-using MediaBrowser.Model.Extensions;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Library;
@@ -1250,17 +1249,14 @@ namespace MediaBrowser.Controller.Entities
 
             // Support plex/xbmc convention
             files.AddRange(fileSystemChildren
-                .Where(i => !i.IsDirectory && string.Equals(FileSystem.GetFileNameWithoutExtension(i), ThemeSongFilename, StringComparison.OrdinalIgnoreCase))
-                );
+                .Where(i => !i.IsDirectory && string.Equals(FileSystem.GetFileNameWithoutExtension(i), ThemeSongFilename, StringComparison.OrdinalIgnoreCase)));
 
             return LibraryManager.ResolvePaths(files, directoryService, null, new LibraryOptions())
                 .OfType<Audio.Audio>()
                 .Select(audio =>
                 {
                     // Try to retrieve it from the db. If we don't find it, use the resolved version
-                    var dbItem = LibraryManager.GetItemById(audio.Id) as Audio.Audio;
-
-                    if (dbItem != null)
+                    if (LibraryManager.GetItemById(audio.Id) is Audio.Audio dbItem)
                     {
                         audio = dbItem;
                     }
@@ -1271,9 +1267,7 @@ namespace MediaBrowser.Controller.Entities
                     }
 
                     return audio;
-
-                    // Sort them so that the list can be easily compared for changes
-                }).OrderBy(i => i.Path).ToArray();
+                }).ToArray();
         }
 
         /// <summary>
@@ -1303,9 +1297,7 @@ namespace MediaBrowser.Controller.Entities
                     }
 
                     return item;
-
-                    // Sort them so that the list can be easily compared for changes
-                }).OrderBy(i => i.Path).ToArray();
+                }).ToArray();
         }
 
         protected virtual BaseItem[] LoadExtras(List<FileSystemMetadata> fileSystemChildren, IDirectoryService directoryService)
@@ -1330,13 +1322,11 @@ namespace MediaBrowser.Controller.Entities
                         }
 
                         // Use some hackery to get the extra type based on foldername
-                        Enum.TryParse(extraFolderName.Replace(" ", ""), true, out ExtraType extraType);
+                        Enum.TryParse(extraFolderName.Replace(" ", string.Empty, StringComparison.OrdinalIgnoreCase), true, out ExtraType extraType);
                         item.ExtraType = extraType;
 
                         return item;
-
-                        // Sort them so that the list can be easily compared for changes
-                    }).OrderBy(i => i.Path));
+                    }));
             }
 
             return extras.ToArray();
@@ -1459,21 +1449,13 @@ namespace MediaBrowser.Controller.Entities
         }
 
         protected virtual FileSystemMetadata[] GetFileSystemChildren(IDirectoryService directoryService)
-        {
-            var path = ContainingFolderPath;
-
-            return directoryService.GetFileSystemEntries(path);
-        }
+            => directoryService.GetFileSystemEntries(ContainingFolderPath);
 
         private async Task<bool> RefreshLocalTrailers(IHasTrailers item, MetadataRefreshOptions options, List<FileSystemMetadata> fileSystemChildren, CancellationToken cancellationToken)
         {
-            var newItems = LibraryManager.FindTrailers(this, fileSystemChildren, options.DirectoryService);
+            var newItems = LibraryManager.FindTrailers(this, fileSystemChildren, options.DirectoryService).ToList();
 
-            var newItemIds = newItems.Select(i => i.Id);
-
-            var itemsChanged = !item.LocalTrailerIds.SequenceEqual(newItemIds);
             var ownerId = item.Id;
-
             var tasks = newItems.Select(i =>
             {
                 var subOptions = new MetadataRefreshOptions(options);
@@ -1493,8 +1475,9 @@ namespace MediaBrowser.Controller.Entities
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
 
-            item.LocalTrailerIds = newItemIds.ToArray();
-
+            var newItemIds = newItems.Select(i => i.Id).ToArray();
+            var itemsChanged = !item.LocalTrailerIds.ScrambledEquals(newItemIds);
+            item.LocalTrailerIds = newItemIds;
             return itemsChanged;
         }
 
@@ -1510,7 +1493,7 @@ namespace MediaBrowser.Controller.Entities
 
             var newExtraIds = newExtras.Select(i => i.Id).ToArray();
 
-            var extrasChanged = !item.ExtraIds.SequenceEqual(newExtraIds);
+            var extrasChanged = !item.ExtraIds.ScrambledEquals(newExtraIds);
 
             if (extrasChanged)
             {
@@ -1543,7 +1526,7 @@ namespace MediaBrowser.Controller.Entities
 
             var newThemeVideoIds = newThemeVideos.Select(i => i.Id).ToArray();
 
-            var themeVideosChanged = !item.ThemeVideoIds.SequenceEqual(newThemeVideoIds);
+            var themeVideosChanged = !item.ThemeVideoIds.ScrambledEquals(newThemeVideoIds);
 
             var ownerId = item.Id;
 
@@ -1580,7 +1563,7 @@ namespace MediaBrowser.Controller.Entities
             var newThemeSongs = LoadThemeSongs(fileSystemChildren, options.DirectoryService);
             var newThemeSongIds = newThemeSongs.Select(i => i.Id).ToArray();
 
-            var themeSongsChanged = !item.ThemeSongIds.SequenceEqual(newThemeSongIds);
+            var themeSongsChanged = !item.ThemeSongIds.ScrambledEquals(newThemeSongIds);
 
             var ownerId = item.Id;
 
@@ -2666,36 +2649,43 @@ namespace MediaBrowser.Controller.Entities
                     newOptions.ForceSave = true;
                     ownedItem.Genres = item.Genres;
                 }
+
                 if (!item.Studios.SequenceEqual(ownedItem.Studios, StringComparer.Ordinal))
                 {
                     newOptions.ForceSave = true;
                     ownedItem.Studios = item.Studios;
                 }
+
                 if (!item.ProductionLocations.SequenceEqual(ownedItem.ProductionLocations, StringComparer.Ordinal))
                 {
                     newOptions.ForceSave = true;
                     ownedItem.ProductionLocations = item.ProductionLocations;
                 }
+
                 if (item.CommunityRating != ownedItem.CommunityRating)
                 {
                     ownedItem.CommunityRating = item.CommunityRating;
                     newOptions.ForceSave = true;
                 }
+
                 if (item.CriticRating != ownedItem.CriticRating)
                 {
                     ownedItem.CriticRating = item.CriticRating;
                     newOptions.ForceSave = true;
                 }
+
                 if (!string.Equals(item.Overview, ownedItem.Overview, StringComparison.Ordinal))
                 {
                     ownedItem.Overview = item.Overview;
                     newOptions.ForceSave = true;
                 }
+
                 if (!string.Equals(item.OfficialRating, ownedItem.OfficialRating, StringComparison.Ordinal))
                 {
                     ownedItem.OfficialRating = item.OfficialRating;
                     newOptions.ForceSave = true;
                 }
+
                 if (!string.Equals(item.CustomRating, ownedItem.CustomRating, StringComparison.Ordinal))
                 {
                     ownedItem.CustomRating = item.CustomRating;

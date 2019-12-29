@@ -9,6 +9,7 @@ namespace Jellyfin.Common.Benches
         {
             _ = BenchmarkRunner.Run<HexEncodeBenches>();
             _ = BenchmarkRunner.Run<HexDecodeBenches>();
+            _ = BenchmarkRunner.Run<ScrambledEqualsBenches>();
         }
     }
 }

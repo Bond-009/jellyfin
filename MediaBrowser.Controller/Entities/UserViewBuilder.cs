@@ -661,9 +661,7 @@ namespace MediaBrowser.Controller.Entities
 
                 var isPlaceHolder = false;
 
-                var hasPlaceHolder = item as ISupportsPlaceHolders;
-
-                if (hasPlaceHolder != null)
+                if (item is ISupportsPlaceHolders hasPlaceHolder)
                 {
                     isPlaceHolder = hasPlaceHolder.IsPlaceHolder;
                 }
@@ -678,13 +676,11 @@ namespace MediaBrowser.Controller.Entities
             {
                 var filterValue = query.HasSpecialFeature.Value;
 
-                var movie = item as IHasSpecialFeatures;
-
-                if (movie != null)
+                if (item is IHasSpecialFeatures movie)
                 {
                     var ok = filterValue
-                        ? movie.SpecialFeatureIds.Length > 0
-                        : movie.SpecialFeatureIds.Length == 0;
+                        ? movie.SpecialFeatureIds.Count > 0
+                        : movie.SpecialFeatureIds.Count == 0;
 
                     if (!ok)
                     {
@@ -701,9 +697,7 @@ namespace MediaBrowser.Controller.Entities
             {
                 var val = query.HasSubtitles.Value;
 
-                var video = item as Video;
-
-                if (video == null || val != video.HasSubtitles)
+                if (!(item is Video video) || val != video.HasSubtitles)
                 {
                     return false;
                 }

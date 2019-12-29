@@ -700,7 +700,7 @@ namespace Emby.Server.Implementations.Library
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error resolving path {path}", f.FullName);
+                    _logger.LogError(ex, "Error resolving path {Path}", f.FullName);
                     return null;
                 }
             }).Where(i => i != null);
@@ -1193,7 +1193,6 @@ namespace Emby.Server.Implementations.Library
                         }
                     })
                     .Where(i => i != null)
-                    .OrderBy(i => i)
                     .ToArray(),
 
                 CollectionType = GetCollectionType(dir)
@@ -2545,20 +2544,28 @@ namespace Emby.Server.Implementations.Library
         {
             var namingOptions = GetNamingOptions();
 
-            var files = owner.IsInMixedFolder ? new List<FileSystemMetadata>() : fileSystemChildren.Where(i => i.IsDirectory)
-                .Where(i => string.Equals(i.Name, BaseItem.TrailerFolderName, StringComparison.OrdinalIgnoreCase))
-                .SelectMany(i => _fileSystem.GetFiles(i.FullName, _videoFileExtensions, false, false))
-                .ToList();
+            List<FileSystemMetadata> files;
+            if (owner.IsInMixedFolder)
+            {
+                files = new List<FileSystemMetadata>();
+            }
+            else
+            {
+                var trailerFolderName = BaseItem.TrailerFolderName;
+                files = fileSystemChildren.Where(i => i.IsDirectory)
+                    .Where(i => string.Equals(i.Name, trailerFolderName, StringComparison.OrdinalIgnoreCase))
+                    .SelectMany(i => _fileSystem.GetFiles(i.FullName, _videoFileExtensions, false, false))
+                    .ToList();
+            }
 
             var videoListResolver = new VideoListResolver(namingOptions);
-
             var videos = videoListResolver.Resolve(fileSystemChildren);
-
-            var currentVideo = videos.FirstOrDefault(i => string.Equals(owner.Path, i.Files.First().Path, StringComparison.OrdinalIgnoreCase));
-
+            var currentVideo = videos.FirstOrDefault(i => string.Equals(owner.Path, i.Files[0].Path, StringComparison.OrdinalIgnoreCase));
             if (currentVideo != null)
             {
-                files.AddRange(currentVideo.Extras.Where(i => string.Equals(i.ExtraType, "trailer", StringComparison.OrdinalIgnoreCase)).Select(i => _fileSystem.GetFileInfo(i.Path)));
+                files.AddRange(
+                    currentVideo.Extras.Where(i => string.Equals(i.ExtraType, "trailer", StringComparison.OrdinalIgnoreCase))
+                        .Select(i => _fileSystem.GetFileInfo(i.Path)));
             }
 
             var resolvers = new IItemResolver[]
@@ -2571,9 +2578,7 @@ namespace Emby.Server.Implementations.Library
                 .Select(video =>
                 {
                     // Try to retrieve it from the db. If we don't find it, use the resolved version
-                    var dbItem = GetItemById(video.Id) as Trailer;
-
-                    if (dbItem != null)
+                    if (GetItemById(video.Id) is Trailer dbItem)
                     {
                         video = dbItem;
                     }
@@ -2584,9 +2589,7 @@ namespace Emby.Server.Implementations.Library
                     video.TrailerTypes = new[] { TrailerType.LocalTrailer };
 
                     return video;
-
-                    // Sort them so that the list can be easily compared for changes
-                }).OrderBy(i => i.Path);
+                });
         }
 
         private static readonly string[] ExtrasSubfolderNames = new[] { "extras", "specials", "shorts", "scenes", "featurettes", "behind the scenes", "deleted scenes", "interviews" };
@@ -2604,7 +2607,7 @@ namespace Emby.Server.Implementations.Library
 
             var videos = videoListResolver.Resolve(fileSystemChildren);
 
-            var currentVideo = videos.FirstOrDefault(i => string.Equals(owner.Path, i.Files.First().Path, StringComparison.OrdinalIgnoreCase));
+            var currentVideo = videos.FirstOrDefault(i => string.Equals(owner.Path, i.Files[0].Path, StringComparison.OrdinalIgnoreCase));
 
             if (currentVideo != null)
             {
@@ -2616,9 +2619,7 @@ namespace Emby.Server.Implementations.Library
                 .Select(video =>
                 {
                     // Try to retrieve it from the db. If we don't find it, use the resolved version
-                    var dbItem = GetItemById(video.Id) as Video;
-
-                    if (dbItem != null)
+                    if (GetItemById(video.Id) is Video dbItem)
                     {
                         video = dbItem;
                     }
@@ -2629,9 +2630,7 @@ namespace Emby.Server.Implementations.Library
                     SetExtraTypeFromFilename(video);
 
                     return video;
-
-                    // Sort them so that the list can be easily compared for changes
-                }).OrderBy(i => i.Path);
+                });
         }
 
         public string GetPathAfterNetworkSubstitution(string path, BaseItem ownerItem)
@@ -2648,10 +2647,10 @@ namespace Emby.Server.Implementations.Library
                             continue;
                         }
 
-                        var substitutionResult = SubstitutePathInternal(path, pathInfo.Path, pathInfo.NetworkPath);
-                        if (substitutionResult.Item2)
+                        (string newPath, bool changed) = SubstitutePathInternal(path, pathInfo.Path, pathInfo.NetworkPath);
+                        if (changed)
                         {
-                            return substitutionResult.Item1;
+                            return newPath;
                         }
                     }
                 }
@@ -2662,10 +2661,10 @@ namespace Emby.Server.Implementations.Library
 
             if (!string.IsNullOrWhiteSpace(metadataPath) && !string.IsNullOrWhiteSpace(metadataNetworkPath))
             {
-                var metadataSubstitutionResult = SubstitutePathInternal(path, metadataPath, metadataNetworkPath);
-                if (metadataSubstitutionResult.Item2)
+                (string newPath, bool changed) = SubstitutePathInternal(path, metadataPath, metadataNetworkPath);
+                if (changed)
                 {
-                    return metadataSubstitutionResult.Item1;
+                    return newPath;
                 }
             }
 
@@ -2673,10 +2672,10 @@ namespace Emby.Server.Implementations.Library
             {
                 if (!string.IsNullOrWhiteSpace(map.From))
                 {
-                    var substitutionResult = SubstitutePathInternal(path, map.From, map.To);
-                    if (substitutionResult.Item2)
+                    (string newPath, bool changed) = SubstitutePathInternal(path, map.From, map.To);
+                    if (changed)
                     {
-                        return substitutionResult.Item1;
+                        return newPath;
                     }
                 }
             }
@@ -2686,19 +2685,21 @@ namespace Emby.Server.Implementations.Library
 
         public string SubstitutePath(string path, string from, string to)
         {
-            return SubstitutePathInternal(path, from, to).Item1;
+            return SubstitutePathInternal(path, from, to).newPath;
         }
 
-        private Tuple<string, bool> SubstitutePathInternal(string path, string from, string to)
+        private (string newPath, bool changed) SubstitutePathInternal(string path, string from, string to)
         {
             if (string.IsNullOrWhiteSpace(path))
             {
                 throw new ArgumentNullException(nameof(path));
             }
+
             if (string.IsNullOrWhiteSpace(from))
             {
                 throw new ArgumentNullException(nameof(from));
             }
+
             if (string.IsNullOrWhiteSpace(to))
             {
                 throw new ArgumentNullException(nameof(to));
@@ -2712,7 +2713,7 @@ namespace Emby.Server.Implementations.Library
 
             if (!string.Equals(newPath, path, StringComparison.Ordinal))
             {
-                if (to.IndexOf('/') != -1)
+                if (to.IndexOf('/', StringComparison.Ordinal) != -1)
                 {
                     newPath = newPath.Replace('\\', '/');
                 }
@@ -2724,7 +2725,7 @@ namespace Emby.Server.Implementations.Library
                 changed = true;
             }
 
-            return new Tuple<string, bool>(newPath, changed);
+            return (newPath, changed);
         }
 
         private void SetExtraTypeFromFilename(Video item)

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Entities;
@@ -17,7 +19,7 @@ namespace MediaBrowser.Controller.Entities.Movies
     /// </summary>
     public class Movie : Video, IHasSpecialFeatures, IHasTrailers, IHasLookupInfo<MovieInfo>, ISupportsBoxSetGrouping
     {
-        public Guid[] SpecialFeatureIds { get; set; }
+        public IReadOnlyList<Guid> SpecialFeatureIds { get; set; }
 
         public Movie()
         {
@@ -81,7 +83,7 @@ namespace MediaBrowser.Controller.Entities.Movies
             var newItems = LibraryManager.FindExtras(this, fileSystemChildren, options.DirectoryService).ToList();
             var newItemIds = newItems.Select(i => i.Id).ToArray();
 
-            var itemsChanged = !SpecialFeatureIds.SequenceEqual(newItemIds);
+            var itemsChanged = !SpecialFeatureIds.ScrambledEquals(newItemIds);
 
             var ownerId = Id;
 
@@ -179,7 +181,10 @@ namespace MediaBrowser.Controller.Entities.Movies
                 list.Add(new ExternalUrl
                 {
                     Name = "Trakt",
-                    Url = string.Format("https://trakt.tv/movies/{0}", imdbId)
+                    Url = string.Format(
+                        CultureInfo.InvariantCulture,
+                        "https://trakt.tv/movies/{0}",
+                        imdbId)
                 });
             }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MediaBrowser.Common.Extensions;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Audio;
@@ -73,13 +74,12 @@ namespace MediaBrowser.Providers.Music
             var artists = songs
                 .SelectMany(i => i.AlbumArtists)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(i => i)
                 .ToArray();
 
-            if (!item.AlbumArtists.SequenceEqual(artists, StringComparer.OrdinalIgnoreCase))
+            if (!item.AlbumArtists.ScrambledEquals(artists, StringComparer.OrdinalIgnoreCase))
             {
                 item.AlbumArtists = artists;
-                updateType = updateType | ItemUpdateType.MetadataEdit;
+                updateType |= ItemUpdateType.MetadataEdit;
             }
 
             return updateType;
@@ -92,13 +92,12 @@ namespace MediaBrowser.Providers.Music
             var artists = songs
                 .SelectMany(i => i.Artists)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(i => i)
                 .ToArray();
 
-            if (!item.Artists.SequenceEqual(artists, StringComparer.OrdinalIgnoreCase))
+            if (!item.Artists.ScrambledEquals(artists, StringComparer.OrdinalIgnoreCase))
             {
                 item.Artists = artists;
-                updateType = updateType | ItemUpdateType.MetadataEdit;
+                updateType |= ItemUpdateType.MetadataEdit;
             }
 
             return updateType;

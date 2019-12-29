@@ -11,14 +11,13 @@ namespace Emby.Naming.Video
         {
             if (path == null)
             {
-                return default(StubResult);
+                return default;
             }
 
             var extension = Path.GetExtension(path);
-
             if (!options.StubFileExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             {
-                return default(StubResult);
+                return default;
             }
 
             var result = new StubResult()
@@ -26,12 +25,11 @@ namespace Emby.Naming.Video
                 IsStub = true
             };
 
-            path = Path.GetFileNameWithoutExtension(path);
-            var token = Path.GetExtension(path).TrimStart('.');
-
+            ReadOnlySpan<char> path2 = Path.GetFileNameWithoutExtension(path.AsSpan());
+            ReadOnlySpan<char> token = Path.GetExtension(path2).TrimStart('.');
             foreach (var rule in options.StubTypes)
             {
-                if (string.Equals(rule.Token, token, StringComparison.OrdinalIgnoreCase))
+                if (token.Equals(rule.Token, StringComparison.OrdinalIgnoreCase))
                 {
                     result.StubType = rule.StubType;
                     break;

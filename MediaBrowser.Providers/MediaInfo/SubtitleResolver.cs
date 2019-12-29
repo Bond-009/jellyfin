@@ -95,7 +95,7 @@ namespace MediaBrowser.Providers.MediaInfo
             IDirectoryService directoryService,
             bool clearCache)
         {
-            var files = directoryService.GetFilePaths(folder, clearCache).OrderBy(i => i).ToArray();
+            var files = directoryService.GetFilePaths(folder, clearCache);
 
             AddExternalSubtitleStreams(streams, videoPath, startIndex, files);
         }
@@ -103,7 +103,7 @@ namespace MediaBrowser.Providers.MediaInfo
         public void AddExternalSubtitleStreams(List<MediaStream> streams,
             string videoPath,
             int startIndex,
-            string[] files)
+            IEnumerable<string> files)
         {
             var videoFileNameWithoutExtension = Path.GetFileNameWithoutExtension(videoPath);
             videoFileNameWithoutExtension = NormalizeFilenameForSubtitleComparison(videoFileNameWithoutExtension);
