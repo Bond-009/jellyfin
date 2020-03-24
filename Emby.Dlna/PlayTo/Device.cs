@@ -93,7 +93,9 @@ namespace Emby.Dlna.PlayTo
         private async void RefreshVolume(CancellationToken cancellationToken)
         {
             if (_disposed)
+            {
                 return;
+            }
 
             try
             {
@@ -211,7 +213,9 @@ namespace Emby.Dlna.PlayTo
 
             var command = rendererCommands.ServiceActions.FirstOrDefault(c => c.Name == "SetMute");
             if (command == null)
+            {
                 return false;
+            }
 
             var service = GetServiceRenderingControl();
 
@@ -240,7 +244,9 @@ namespace Emby.Dlna.PlayTo
 
             var command = rendererCommands.ServiceActions.FirstOrDefault(c => c.Name == "SetVolume");
             if (command == null)
+            {
                 return;
+            }
 
             var service = GetServiceRenderingControl();
 
@@ -263,7 +269,9 @@ namespace Emby.Dlna.PlayTo
 
             var command = avCommands.ServiceActions.FirstOrDefault(c => c.Name == "Seek");
             if (command == null)
+            {
                 return;
+            }
 
             var service = GetAvTransportService();
 
@@ -288,7 +296,9 @@ namespace Emby.Dlna.PlayTo
 
             var command = avCommands.ServiceActions.FirstOrDefault(c => c.Name == "SetAVTransportURI");
             if (command == null)
+            {
                 return;
+            }
 
             var dictionary = new Dictionary<string, string>
             {
@@ -453,7 +463,9 @@ namespace Emby.Dlna.PlayTo
                     _connectFailureCount = 0;
 
                     if (_disposed)
+                    {
                         return;
+                    }
 
                     // If we're not playing anything make sure we don't get data more often than neccessry to keep the Session alive
                     if (transportState.Value == TRANSPORTSTATE.STOPPED)
@@ -473,7 +485,9 @@ namespace Emby.Dlna.PlayTo
             catch (Exception ex)
             {
                 if (_disposed)
+                {
                     return;
+                }
 
                 _logger.LogError(ex, "Error updating device info for {DeviceName}", Properties.Name);
 
@@ -565,7 +579,9 @@ namespace Emby.Dlna.PlayTo
                 .ConfigureAwait(false);
 
             if (result == null || result.Document == null)
+            {
                 return;
+            }
 
             var valueNode = result.Document.Descendants(uPnpNamespaces.RenderingControl + "GetMuteResponse")
                                             .Select(i => i.Element("CurrentMute"))
@@ -1171,7 +1187,7 @@ namespace Emby.Dlna.PlayTo
 
         #region IDisposable
 
-        bool _disposed;
+        private bool _disposed;
 
         public void Dispose()
         {

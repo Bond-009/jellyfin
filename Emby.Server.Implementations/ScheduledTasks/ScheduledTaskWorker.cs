@@ -329,7 +329,7 @@ namespace Emby.Server.Implementations.ScheduledTasks
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        async void trigger_Triggered(object sender, EventArgs e)
+        private async void trigger_Triggered(object sender, EventArgs e)
         {
             var trigger = (ITaskTrigger)sender;
 
@@ -439,7 +439,7 @@ namespace Emby.Server.Implementations.ScheduledTasks
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="e">The e.</param>
-        void progress_ProgressChanged(object sender, double e)
+        private void progress_ProgressChanged(object sender, double e)
         {
             e = Math.Min(e, 100);
 

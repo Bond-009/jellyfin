@@ -34,9 +34,15 @@ namespace MediaBrowser.MediaEncoding.Subtitles
                         continue;
                     }
                     if (line.StartsWith("["))
+                    {
                         break;
+                    }
+
                     if (string.IsNullOrEmpty(line))
+                    {
                         continue;
+                    }
+
                     var subEvent = new SubtitleTrackEvent { Id = eventIndex.ToString(_usCulture) };
                     eventIndex++;
                     var sections = line.Substring(10).Split(',');
@@ -58,7 +64,7 @@ namespace MediaBrowser.MediaEncoding.Subtitles
             return trackInfo;
         }
 
-        long GetTicks(string time)
+        private long GetTicks(string time)
         {
             return TimeSpan.TryParseExact(time, @"h\:mm\:ss\.ff", _usCulture, out var span)
                 ? span.Ticks : 0;

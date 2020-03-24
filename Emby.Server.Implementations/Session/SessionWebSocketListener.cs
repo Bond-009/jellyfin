@@ -48,7 +48,7 @@ namespace Emby.Server.Implementations.Session
             httpServer.WebSocketConnected += _serverManager_WebSocketConnected;
         }
 
-        void _serverManager_WebSocketConnected(object sender, GenericEventArgs<IWebSocketConnection> e)
+        private void _serverManager_WebSocketConnected(object sender, GenericEventArgs<IWebSocketConnection> e)
         {
             var session = GetSession(e.Argument.QueryString, e.Argument.RemoteEndPoint);
 

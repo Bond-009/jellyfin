@@ -255,10 +255,14 @@ namespace Emby.Server.Implementations.HttpServer
                 //    return "br";
 
                 if (acceptEncoding.IndexOf("deflate", StringComparison.OrdinalIgnoreCase) != -1)
+                {
                     return "deflate";
+                }
 
                 if (acceptEncoding.IndexOf("gzip", StringComparison.OrdinalIgnoreCase) != -1)
+                {
                     return "gzip";
+                }
             }
 
             return null;

@@ -26,7 +26,10 @@ namespace Rssdp.Infrastructure
         /// <seealso cref="Dispose()"/>
         protected virtual void ThrowIfDisposed()
         {
-            if (this.IsDisposed) throw new ObjectDisposedException(this.GetType().FullName);
+            if (this.IsDisposed)
+            {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
         }
 
         #endregion

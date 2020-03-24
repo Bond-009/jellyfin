@@ -43,7 +43,7 @@ namespace Emby.Server.Implementations.EntryPoints
             return Task.CompletedTask;
         }
 
-        void OnUserDataManagerUserDataSaved(object sender, UserDataSaveEventArgs e)
+        private void OnUserDataManagerUserDataSaved(object sender, UserDataSaveEventArgs e)
         {
             if (e.SaveReason == UserDataSaveReason.PlaybackProgress)
             {

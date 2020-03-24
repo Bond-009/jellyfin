@@ -138,7 +138,7 @@ namespace Emby.Dlna.Main
             _config.NamedConfigurationUpdated += _config_NamedConfigurationUpdated;
         }
 
-        void _config_NamedConfigurationUpdated(object sender, ConfigurationUpdateEventArgs e)
+        private void _config_NamedConfigurationUpdated(object sender, ConfigurationUpdateEventArgs e)
         {
             if (string.Equals(e.Key, "dlna", StringComparison.OrdinalIgnoreCase))
             {

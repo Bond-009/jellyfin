@@ -962,7 +962,7 @@ namespace MediaBrowser.MediaEncoding.Encoder
 
             public int? ExitCode { get; private set; }
 
-            void OnProcessExited(object sender, EventArgs e)
+            private void OnProcessExited(object sender, EventArgs e)
             {
                 var process = (IProcess)sender;
 

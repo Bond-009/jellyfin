@@ -37,19 +37,19 @@ namespace MediaBrowser.Api.ScheduledTasks
             TaskManager.TaskCompleted += TaskManager_TaskCompleted;
         }
 
-        void TaskManager_TaskCompleted(object sender, TaskCompletionEventArgs e)
+        private void TaskManager_TaskCompleted(object sender, TaskCompletionEventArgs e)
         {
             SendData(true);
             e.Task.TaskProgress -= Argument_TaskProgress;
         }
 
-        void TaskManager_TaskExecuting(object sender, GenericEventArgs<IScheduledTaskWorker> e)
+        private void TaskManager_TaskExecuting(object sender, GenericEventArgs<IScheduledTaskWorker> e)
         {
             SendData(true);
             e.Argument.TaskProgress += Argument_TaskProgress;
         }
 
-        void Argument_TaskProgress(object sender, GenericEventArgs<double> e)
+        private void Argument_TaskProgress(object sender, GenericEventArgs<double> e)
         {
             SendData(false);
         }

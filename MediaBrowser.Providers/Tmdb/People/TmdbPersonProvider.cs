@@ -27,7 +27,7 @@ namespace MediaBrowser.Providers.Tmdb.People
 {
     public class TmdbPersonProvider : IRemoteMetadataProvider<Person, PersonLookupInfo>
     {
-        const string DataFileName = "info.json";
+        private const string DataFileName = "info.json";
 
         internal static TmdbPersonProvider Current { get; private set; }
 

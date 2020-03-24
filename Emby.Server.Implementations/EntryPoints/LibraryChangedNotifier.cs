@@ -183,7 +183,7 @@ namespace Emby.Server.Implementations.EntryPoints
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="ItemChangeEventArgs"/> instance containing the event data.</param>
-        void libraryManager_ItemAdded(object sender, ItemChangeEventArgs e)
+        private void libraryManager_ItemAdded(object sender, ItemChangeEventArgs e)
         {
             if (!FilterItem(e.Item))
             {
@@ -220,7 +220,7 @@ namespace Emby.Server.Implementations.EntryPoints
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="ItemChangeEventArgs"/> instance containing the event data.</param>
-        void libraryManager_ItemUpdated(object sender, ItemChangeEventArgs e)
+        private void libraryManager_ItemUpdated(object sender, ItemChangeEventArgs e)
         {
             if (!FilterItem(e.Item))
             {
@@ -248,7 +248,7 @@ namespace Emby.Server.Implementations.EntryPoints
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="ItemChangeEventArgs"/> instance containing the event data.</param>
-        void libraryManager_ItemRemoved(object sender, ItemChangeEventArgs e)
+        private void libraryManager_ItemRemoved(object sender, ItemChangeEventArgs e)
         {
             if (!FilterItem(e.Item))
             {

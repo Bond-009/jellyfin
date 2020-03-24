@@ -5,7 +5,7 @@ using MediaBrowser.Model.IO;
 
 namespace MediaBrowser.MediaEncoding.BdInfo
 {
-    class BdInfoDirectoryInfo : IDirectoryInfo
+    internal class BdInfoDirectoryInfo : IDirectoryInfo
     {
         private readonly IFileSystem _fileSystem = null;
 

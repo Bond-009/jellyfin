@@ -68,7 +68,9 @@ namespace Rssdp
 
             var rootDevice = device as SsdpRootDevice;
             if (rootDevice == null)
+            {
                 rootDevice = ((SsdpEmbeddedDevice)device).RootDevice;
+            }
 
             return rootDevice;
         }
@@ -177,9 +179,13 @@ namespace Rssdp
             get
             {
                 if (String.IsNullOrEmpty(_Udn) && !String.IsNullOrEmpty(this.Uuid))
+                {
                     return "uuid:" + this.Uuid;
+                }
                 else
+                {
                     return _Udn;
+                }
             }
             set
             {
@@ -278,9 +284,20 @@ namespace Rssdp
         /// <seealso cref="DeviceAdded"/>
         public void AddDevice(SsdpEmbeddedDevice device)
         {
-            if (device == null) throw new ArgumentNullException(nameof(device));
-            if (device.RootDevice != null && device.RootDevice != this.ToRootDevice()) throw new InvalidOperationException("This device is already associated with a different root device (has been added as a child in another branch).");
-            if (device == this) throw new InvalidOperationException("Can't add device to itself.");
+            if (device == null)
+            {
+                throw new ArgumentNullException(nameof(device));
+            }
+
+            if (device.RootDevice != null && device.RootDevice != this.ToRootDevice())
+            {
+                throw new InvalidOperationException("This device is already associated with a different root device (has been added as a child in another branch).");
+            }
+
+            if (device == this)
+            {
+                throw new InvalidOperationException("Can't add device to itself.");
+            }
 
             bool wasAdded = false;
             lock (_Devices)
@@ -291,7 +308,9 @@ namespace Rssdp
             }
 
             if (wasAdded)
+            {
                 OnDeviceAdded(device);
+            }
         }
 
         /// <summary>
@@ -306,7 +325,10 @@ namespace Rssdp
         /// <seealso cref="DeviceRemoved"/>
         public void RemoveDevice(SsdpEmbeddedDevice device)
         {
-            if (device == null) throw new ArgumentNullException(nameof(device));
+            if (device == null)
+            {
+                throw new ArgumentNullException(nameof(device));
+            }
 
             bool wasRemoved = false;
             lock (_Devices)
@@ -319,7 +341,9 @@ namespace Rssdp
             }
 
             if (wasRemoved)
+            {
                 OnDeviceRemoved(device);
+            }
         }
 
         /// <summary>
@@ -332,7 +356,9 @@ namespace Rssdp
         {
             var handlers = this.DeviceAdded;
             if (handlers != null)
+            {
                 handlers(this, new DeviceEventArgs(device));
+            }
         }
 
         /// <summary>
@@ -345,7 +371,9 @@ namespace Rssdp
         {
             var handlers = this.DeviceRemoved;
             if (handlers != null)
+            {
                 handlers(this, new DeviceEventArgs(device));
+            }
         }
 
         #endregion

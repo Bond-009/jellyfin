@@ -40,37 +40,37 @@ namespace MediaBrowser.Api.Sessions
             _sessionManager.SessionActivity += _sessionManager_SessionActivity;
         }
 
-        void _sessionManager_SessionActivity(object sender, SessionEventArgs e)
+        private void _sessionManager_SessionActivity(object sender, SessionEventArgs e)
         {
             SendData(false);
         }
 
-        void _sessionManager_CapabilitiesChanged(object sender, SessionEventArgs e)
+        private void _sessionManager_CapabilitiesChanged(object sender, SessionEventArgs e)
         {
             SendData(true);
         }
 
-        void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
+        private void _sessionManager_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
         {
             SendData(!e.IsAutomated);
         }
 
-        void _sessionManager_PlaybackStopped(object sender, PlaybackStopEventArgs e)
+        private void _sessionManager_PlaybackStopped(object sender, PlaybackStopEventArgs e)
         {
             SendData(true);
         }
 
-        void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
+        private void _sessionManager_PlaybackStart(object sender, PlaybackProgressEventArgs e)
         {
             SendData(true);
         }
 
-        void _sessionManager_SessionEnded(object sender, SessionEventArgs e)
+        private void _sessionManager_SessionEnded(object sender, SessionEventArgs e)
         {
             SendData(true);
         }
 
-        void _sessionManager_SessionStarted(object sender, SessionEventArgs e)
+        private void _sessionManager_SessionStarted(object sender, SessionEventArgs e)
         {
             SendData(true);
         }

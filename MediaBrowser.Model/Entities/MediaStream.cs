@@ -376,7 +376,10 @@ namespace MediaBrowser.Model.Entities
         {
             get
             {
-                if (Type != MediaStreamType.Subtitle) return false;
+                if (Type != MediaStreamType.Subtitle)
+                {
+                    return false;
+                }
 
                 if (string.IsNullOrEmpty(Codec) && !IsExternal)
                 {

@@ -276,11 +276,12 @@ namespace MediaBrowser.Providers.Plugins.TheTvdb
         /// <summary>
         /// The remove
         /// </summary>
-        const string remove = "\"'!`?";
+        private const string remove = "\"'!`?";
+
         /// <summary>
         /// The spacers
         /// </summary>
-        const string spacers = "/,.:;\\(){}[]+-_=–*";  // (there are two types of dashes, short and long)
+        private const string spacers = "/,.:;\\(){}[]+-_=–*";  // (there are two types of dashes, short and long)
 
         /// <summary>
         /// Gets the name of the comparable.

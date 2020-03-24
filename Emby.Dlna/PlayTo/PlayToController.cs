@@ -110,7 +110,7 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        void _deviceDiscovery_DeviceLeft(object sender, GenericEventArgs<UpnpDeviceInfo> e)
+        private void _deviceDiscovery_DeviceLeft(object sender, GenericEventArgs<UpnpDeviceInfo> e)
         {
             var info = e.Argument;
 
@@ -125,7 +125,7 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        async void _device_MediaChanged(object sender, MediaChangedEventArgs e)
+        private async void _device_MediaChanged(object sender, MediaChangedEventArgs e)
         {
             if (_disposed)
             {
@@ -143,7 +143,10 @@ namespace Emby.Dlna.PlayTo
                 }
 
                 streamInfo = StreamParams.ParseFromUrl(e.NewMediaInfo.Url, _libraryManager, _mediaSourceManager);
-                if (streamInfo.Item == null) return;
+                if (streamInfo.Item == null)
+                {
+                    return;
+                }
 
                 var newItemProgress = GetProgressInfo(e.NewMediaInfo, streamInfo);
 
@@ -155,7 +158,7 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        async void _device_PlaybackStopped(object sender, PlaybackStoppedEventArgs e)
+        private async void _device_PlaybackStopped(object sender, PlaybackStoppedEventArgs e)
         {
             if (_disposed)
             {
@@ -166,7 +169,10 @@ namespace Emby.Dlna.PlayTo
             {
                 var streamInfo = StreamParams.ParseFromUrl(e.MediaInfo.Url, _libraryManager, _mediaSourceManager);
 
-                if (streamInfo.Item == null) return;
+                if (streamInfo.Item == null)
+                {
+                    return;
+                }
 
                 var positionTicks = GetProgressPositionTicks(e.MediaInfo, streamInfo);
 
@@ -222,7 +228,7 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        async void _device_PlaybackStart(object sender, PlaybackStartEventArgs e)
+        private async void _device_PlaybackStart(object sender, PlaybackStartEventArgs e)
         {
             if (_disposed)
             {
@@ -246,7 +252,7 @@ namespace Emby.Dlna.PlayTo
             }
         }
 
-        async void _device_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
+        private async void _device_PlaybackProgress(object sender, PlaybackProgressEventArgs e)
         {
             if (_disposed)
             {
@@ -853,7 +859,10 @@ namespace Emby.Dlna.PlayTo
                 }
 
                 var index = url.IndexOf('?');
-                if (index == -1) return request;
+                if (index == -1)
+                {
+                    return request;
+                }
 
                 var query = url.Substring(index + 1);
                 Dictionary<string, string> values = QueryHelpers.ParseQuery(query).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());

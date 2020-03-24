@@ -51,7 +51,7 @@ namespace Emby.Server.Implementations.Session
             connection.Closed += connection_Closed;
         }
 
-        void connection_Closed(object sender, EventArgs e)
+        private void connection_Closed(object sender, EventArgs e)
         {
             var connection = (IWebSocketConnection)sender;
             var sockets = Sockets.ToList();

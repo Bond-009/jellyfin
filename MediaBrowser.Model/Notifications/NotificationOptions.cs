@@ -81,7 +81,10 @@ namespace MediaBrowser.Model.Notifications
         {
             foreach (NotificationOption i in Options)
             {
-                if (string.Equals(type, i.Type, StringComparison.OrdinalIgnoreCase)) return i;
+                if (string.Equals(type, i.Type, StringComparison.OrdinalIgnoreCase))
+                {
+                    return i;
+                }
             }
             return null;
         }

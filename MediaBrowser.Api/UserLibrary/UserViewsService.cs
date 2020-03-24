@@ -138,7 +138,7 @@ namespace MediaBrowser.Api.UserLibrary
         }
     }
 
-    class SpecialViewOption
+    internal class SpecialViewOption
     {
         public string Name { get; set; }
         public string Id { get; set; }

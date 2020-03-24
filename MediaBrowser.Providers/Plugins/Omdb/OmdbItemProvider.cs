@@ -277,7 +277,7 @@ namespace MediaBrowser.Providers.Plugins.Omdb
             });
         }
 
-        class SearchResult
+        private class SearchResult
         {
             public string Title { get; set; }
             public string Year { get; set; }

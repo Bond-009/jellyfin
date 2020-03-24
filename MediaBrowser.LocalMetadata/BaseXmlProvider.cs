@@ -73,7 +73,7 @@ namespace MediaBrowser.LocalMetadata
         public virtual int Order => 1;
     }
 
-    static class XmlProviderUtils
+    internal static class XmlProviderUtils
     {
         public static string Name => "Emby Xml";
     }

@@ -118,7 +118,7 @@ namespace Emby.Server.Implementations.HttpServer
         /// <value>The state.</value>
         public WebSocketState State => _socket.State;
 
-        void OnSocketClosed(object sender, EventArgs e)
+        private void OnSocketClosed(object sender, EventArgs e)
         {
             Closed?.Invoke(this, EventArgs.Empty);
         }

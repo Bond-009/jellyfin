@@ -3,9 +3,9 @@ using MediaBrowser.Model.IO;
 
 namespace MediaBrowser.MediaEncoding.BdInfo
 {
-    class BdInfoFileInfo : BDInfo.IO.IFileInfo
+    internal class BdInfoFileInfo : BDInfo.IO.IFileInfo
     {
-        FileSystemMetadata _impl = null;
+        private FileSystemMetadata _impl = null;
 
         public string Name => _impl.Name;
 

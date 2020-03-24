@@ -29,7 +29,7 @@ namespace MediaBrowser.Api.System
             _activityManager.EntryCreated += _activityManager_EntryCreated;
         }
 
-        void _activityManager_EntryCreated(object sender, GenericEventArgs<ActivityLogEntry> e)
+        private void _activityManager_EntryCreated(object sender, GenericEventArgs<ActivityLogEntry> e)
         {
             SendData(true);
         }

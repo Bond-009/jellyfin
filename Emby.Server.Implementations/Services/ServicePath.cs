@@ -120,7 +120,10 @@ namespace Emby.Server.Implementations.Services
             var hasSeparators = new List<bool>();
             foreach (var component in this.restPath.Split(PathSeperatorChar))
             {
-                if (string.IsNullOrEmpty(component)) continue;
+                if (string.IsNullOrEmpty(component))
+                {
+                    continue;
+                }
 
                 if (component.IndexOf(VariablePrefix, StringComparison.OrdinalIgnoreCase) != -1
                     && component.IndexOf(ComponentSeperator) != -1)
@@ -437,12 +440,14 @@ namespace Emby.Server.Implementations.Services
                     && requestComponents.Length >= this.TotalComponentsCount - this.wildcardCount;
 
                 if (!isValidWildCardPath)
+                {
                     throw new ArgumentException(
                         string.Format(
                             CultureInfo.InvariantCulture,
                             "Path Mismatch: Request Path '{0}' has invalid number of components compared to: '{1}'",
                             pathInfo,
                             this.restPath));
+                }
             }
 
             var requestKeyValuesMap = new Dictionary<string, string>();
