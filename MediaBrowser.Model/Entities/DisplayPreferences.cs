@@ -9,11 +9,6 @@ namespace MediaBrowser.Model.Entities
     public class DisplayPreferences
     {
         /// <summary>
-        /// The image scale.
-        /// </summary>
-        private const double ImageScale = .9;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="DisplayPreferences" /> class.
         /// </summary>
         public DisplayPreferences()
