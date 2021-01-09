@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Emby.Server.Implementations\Emby.Server.Implementations.csproj" />
+    <ProjectReference Include="../../src/Emby.Server.Implementations/Emby.Server.Implementations.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Emby.Naming\Emby.Naming.csproj" />
+    <ProjectReference Include="../../src/Emby.Naming/Emby.Naming.csproj" />
   </ItemGroup>
 
   <!-- Code Analyzers-->

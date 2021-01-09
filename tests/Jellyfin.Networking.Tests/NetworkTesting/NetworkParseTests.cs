@@ -194,12 +194,12 @@ namespace Jellyfin.Networking.Tests
             {
                 EnableIPV6 = true,
                 EnableIPV4 = true,
-            };           
+            };
 
             using var nm = new NetworkManager(GetMockConfig(conf), new NullLogger<NetworkManager>());
 
             // Test included.
-            Collection<IPObject> nc = nm.CreateIPCollection(settings.Split(","), false); 
+            Collection<IPObject> nc = nm.CreateIPCollection(settings.Split(","), false);
             Assert.Equal(nc.AsString(), result1);
 
             // Test excluded.
@@ -208,7 +208,7 @@ namespace Jellyfin.Networking.Tests
 
             conf.EnableIPV6 = false;
             nm.UpdateSettings(conf);
-            
+
             // Test IP4 included.
             nc = nm.CreateIPCollection(settings.Split(","), false);
             Assert.Equal(nc.AsString(), result2);
@@ -455,7 +455,7 @@ namespace Jellyfin.Networking.Tests
         // On my system eth16 is internal, eth11 external (Windows defines the indexes).
         //
         // This test is to replicate how subnet bound ServerPublisherUri work throughout the system.
-        
+
         // User on internal network, we're bound internal and external - so result is internal override.
         [InlineData("192.168.1.1", "192.168.1.0/24", "eth16,eth11", false, "192.168.1.0/24=internal.jellyfin", "internal.jellyfin")]
 

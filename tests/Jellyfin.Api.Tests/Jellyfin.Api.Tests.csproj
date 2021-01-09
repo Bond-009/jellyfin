@@ -34,7 +34,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Jellyfin.Server\Jellyfin.Server.csproj" />
+    <ProjectReference Include="../../src/Jellyfin.Server/Jellyfin.Server.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

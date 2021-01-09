@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../MediaBrowser.Model/MediaBrowser.Model.csproj" />
+    <ProjectReference Include="../../src/MediaBrowser.Model/MediaBrowser.Model.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
