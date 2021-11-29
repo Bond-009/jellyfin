@@ -767,7 +767,7 @@ namespace Emby.Server.Implementations.LiveTv.Listings
             var listingsId = info.ListingsId;
             if (string.IsNullOrEmpty(listingsId))
             {
-                throw new Exception("ListingsId required");
+                throw new ArgumentException("ListingsId required", nameof(info));
             }
 
             var token = await GetToken(info, cancellationToken).ConfigureAwait(false);
@@ -821,11 +821,6 @@ namespace Emby.Server.Implementations.LiveTv.Listings
             }
 
             return list;
-        }
-
-        private static string NormalizeName(string value)
-        {
-            return value.Replace(" ", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal);
         }
     }
 }

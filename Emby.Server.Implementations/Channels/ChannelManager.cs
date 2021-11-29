@@ -134,14 +134,12 @@ namespace Emby.Server.Implementations.Channels
 
             var channel = Channels.FirstOrDefault(i => GetInternalChannelId(i.Name).Equals(internalChannel.Id));
 
-            var supportsDelete = channel as ISupportsDelete;
-
-            if (supportsDelete == null)
+            if (channel is ISupportsDelete supportsDelete)
             {
-                throw new ArgumentException();
+                return supportsDelete.DeleteItem(item.ExternalId, CancellationToken.None);
             }
 
-            return supportsDelete.DeleteItem(item.ExternalId, CancellationToken.None);
+            throw new ArgumentException();
         }
 
         private IEnumerable<IChannel> GetAllChannels()
