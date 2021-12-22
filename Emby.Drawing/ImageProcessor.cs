@@ -16,7 +16,6 @@ using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Net;
 using Microsoft.Extensions.Logging;
-using Photo = MediaBrowser.Controller.Entities.Photo;
 
 namespace Emby.Drawing
 {
@@ -146,27 +145,7 @@ namespace Emby.Drawing
             dateModified = supportedImageInfo.dateModified;
             bool requiresTransparency = _transparentImageTypes.Contains(Path.GetExtension(originalImagePath));
 
-            bool autoOrient = false;
-            ImageOrientation? orientation = null;
-            if (item is Photo photo)
-            {
-                if (photo.Orientation.HasValue)
-                {
-                    if (photo.Orientation.Value != ImageOrientation.TopLeft)
-                    {
-                        autoOrient = true;
-                        orientation = photo.Orientation;
-                    }
-                }
-                else
-                {
-                    // Orientation unknown, so do it
-                    autoOrient = true;
-                    orientation = photo.Orientation;
-                }
-            }
-
-            if (options.HasDefaultOptions(originalImagePath, originalImageSize) && (!autoOrient || !options.RequiresAutoOrientation))
+            if (options.HasDefaultOptions(originalImagePath, originalImageSize) && !options.RequiresAutoOrientation)
             {
                 // Just spit out the original file if all the options are default
                 return (originalImagePath, MimeTypes.GetMimeType(originalImagePath), dateModified);
@@ -197,7 +176,7 @@ namespace Emby.Drawing
             {
                 if (!File.Exists(cacheFilePath))
                 {
-                    string resultPath = _imageEncoder.EncodeImage(originalImagePath, dateModified, cacheFilePath, autoOrient, orientation, quality, options, outputFormat);
+                    string resultPath = _imageEncoder.EncodeImage(originalImagePath, dateModified, cacheFilePath, false, null, quality, options, outputFormat);
 
                     if (string.Equals(resultPath, originalImagePath, StringComparison.OrdinalIgnoreCase))
                     {

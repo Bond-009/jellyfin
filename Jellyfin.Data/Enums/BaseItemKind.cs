@@ -114,16 +114,6 @@
         Person,
 
         /// <summary>
-        /// Item is photo.
-        /// </summary>
-        Photo,
-
-        /// <summary>
-        /// Item is photo album.
-        /// </summary>
-        PhotoAlbum,
-
-        /// <summary>
         /// Item is playlist.
         /// </summary>
         Playlist,

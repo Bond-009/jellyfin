@@ -81,7 +81,7 @@ namespace MediaBrowser.LocalMetadata.Images
             if (item.SupportsLocalMetadata)
             {
                 // Episode has its own provider
-                if (item is Episode || item is Audio || item is Photo)
+                if (item is Episode || item is Audio)
                 {
                     return false;
                 }

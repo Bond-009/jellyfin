@@ -31,7 +31,6 @@ using Episode = MediaBrowser.Controller.Entities.TV.Episode;
 using Movie = MediaBrowser.Controller.Entities.Movies.Movie;
 using MusicAlbum = MediaBrowser.Controller.Entities.Audio.MusicAlbum;
 using Person = MediaBrowser.Controller.Entities.Person;
-using Photo = MediaBrowser.Controller.Entities.Photo;
 using Season = MediaBrowser.Controller.Entities.TV.Season;
 using Series = MediaBrowser.Controller.Entities.TV.Series;
 
@@ -432,31 +431,6 @@ namespace Emby.Server.Implementations.Dto
         private static void SetBookProperties(BaseItemDto dto, Book item)
         {
             dto.SeriesName = item.SeriesName;
-        }
-
-        private static void SetPhotoProperties(BaseItemDto dto, Photo item)
-        {
-            dto.CameraMake = item.CameraMake;
-            dto.CameraModel = item.CameraModel;
-            dto.Software = item.Software;
-            dto.ExposureTime = item.ExposureTime;
-            dto.FocalLength = item.FocalLength;
-            dto.ImageOrientation = item.Orientation;
-            dto.Aperture = item.Aperture;
-            dto.ShutterSpeed = item.ShutterSpeed;
-
-            dto.Latitude = item.Latitude;
-            dto.Longitude = item.Longitude;
-            dto.Altitude = item.Altitude;
-            dto.IsoSpeedRating = item.IsoSpeedRating;
-
-            var album = item.AlbumEntity;
-
-            if (album != null)
-            {
-                dto.Album = album.Name;
-                dto.AlbumId = album.Id;
-            }
         }
 
         private string GetDtoId(BaseItem item)
@@ -1240,11 +1214,6 @@ namespace Emby.Server.Implementations.Dto
                 {
                     dto.IsHD = true;
                 }
-            }
-
-            if (item is Photo photo)
-            {
-                SetPhotoProperties(dto, photo);
             }
 
             dto.ChannelId = item.ChannelId;

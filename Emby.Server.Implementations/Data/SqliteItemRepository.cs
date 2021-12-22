@@ -210,7 +210,6 @@ namespace Emby.Server.Implementations.Data
             BaseItemKind.Season,
             BaseItemKind.MusicAlbum,
             BaseItemKind.MusicArtist,
-            BaseItemKind.PhotoAlbum
         };
 
         private static readonly BaseItemKind[] _serviceTypes = new[]
@@ -237,7 +236,6 @@ namespace Emby.Server.Implementations.Data
         {
             BaseItemKind.Series,
             BaseItemKind.Season,
-            BaseItemKind.PhotoAlbum
         };
 
         private static readonly BaseItemKind[] _artistsTypes = new[]
@@ -271,8 +269,6 @@ namespace Emby.Server.Implementations.Data
             typeof(Folder),
             typeof(Genre),
             typeof(Person),
-            typeof(Photo),
-            typeof(PhotoAlbum),
             typeof(Studio),
             typeof(UserRootFolder),
             typeof(UserView),
@@ -305,8 +301,6 @@ namespace Emby.Server.Implementations.Data
             { BaseItemKind.MusicGenre, typeof(MusicGenre).FullName },
             { BaseItemKind.MusicVideo, typeof(MusicVideo).FullName },
             { BaseItemKind.Person, typeof(Person).FullName },
-            { BaseItemKind.Photo, typeof(Photo).FullName },
-            { BaseItemKind.PhotoAlbum, typeof(PhotoAlbum).FullName },
             { BaseItemKind.Playlist, typeof(Playlist).FullName },
             { BaseItemKind.PlaylistsFolder, typeof(PlaylistsFolder).FullName },
             { BaseItemKind.Season, typeof(Season).FullName },
@@ -2328,11 +2322,6 @@ namespace Emby.Server.Implementations.Data
 
         private bool HasSeriesFields(InternalItemsQuery query)
         {
-            if (query.ParentType == BaseItemKind.PhotoAlbum)
-            {
-                return false;
-            }
-
             if (query.IncludeItemTypes.Length == 0)
             {
                 return true;

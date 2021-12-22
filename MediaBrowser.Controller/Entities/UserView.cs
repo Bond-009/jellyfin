@@ -27,7 +27,6 @@ namespace MediaBrowser.Controller.Entities
             Model.Entities.CollectionType.Books,
             Model.Entities.CollectionType.MusicVideos,
             Model.Entities.CollectionType.HomeVideos,
-            Model.Entities.CollectionType.Photos,
             Model.Entities.CollectionType.Music,
             Model.Entities.CollectionType.BoxSets
         };

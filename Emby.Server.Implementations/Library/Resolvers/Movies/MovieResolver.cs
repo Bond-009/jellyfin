@@ -32,8 +32,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
                 CollectionType.Movies,
                 CollectionType.HomeVideos,
                 CollectionType.MusicVideos,
-                CollectionType.Movies,
-                CollectionType.Photos
+                CollectionType.Movies
         };
 
         /// <summary>
@@ -152,8 +151,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
             {
                 item = ResolveVideo<Movie>(args, true);
             }
-            else if (string.Equals(collectionType, CollectionType.HomeVideos, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(collectionType, CollectionType.Photos, StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(collectionType, CollectionType.HomeVideos, StringComparison.OrdinalIgnoreCase))
             {
                 item = ResolveVideo<Video>(args, false);
             }
@@ -196,8 +194,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
                 return ResolveVideos<MusicVideo>(parent, files, true, collectionType, false);
             }
 
-            if (string.Equals(collectionType, CollectionType.HomeVideos, StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(collectionType, CollectionType.Photos, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(collectionType, CollectionType.HomeVideos, StringComparison.OrdinalIgnoreCase))
             {
                 return ResolveVideos<Video>(parent, files, false, collectionType, false);
             }
@@ -397,10 +394,6 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
         {
             var multiDiscFolders = new List<FileSystemMetadata>();
 
-            var libraryOptions = args.LibraryOptions;
-            var supportPhotos = string.Equals(collectionType, CollectionType.HomeVideos, StringComparison.OrdinalIgnoreCase) && libraryOptions.EnablePhotos;
-            var photos = new List<FileSystemMetadata>();
-
             // Search for a folder rip
             foreach (var child in fileSystemEntries)
             {
@@ -442,10 +435,6 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
                     Set3DFormat(movie);
                     return movie;
                 }
-                else if (supportPhotos && PhotoResolver.IsImageFile(child.FullName, _imageProcessor))
-                {
-                    photos.Add(child);
-                }
             }
 
             // TODO: Allow GetMultiDiscMovie in here
@@ -456,16 +445,10 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
 
             if (result.Items.Count == 1)
             {
-                var videoPath = result.Items[0].Path;
-                var hasPhotos = photos.Any(i => !PhotoResolver.IsOwnedByResolvedMedia(videoPath, i.Name));
-
-                if (!hasPhotos)
-                {
-                    var movie = (T)result.Items[0];
-                    movie.IsInMixedFolder = false;
-                    movie.Name = Path.GetFileName(movie.ContainingFolderPath);
-                    return movie;
-                }
+                var movie = (T)result.Items[0];
+                movie.IsInMixedFolder = false;
+                movie.Name = Path.GetFileName(movie.ContainingFolderPath);
+                return movie;
             }
             else if (result.Items.Count == 0 && multiDiscFolders.Count > 0)
             {

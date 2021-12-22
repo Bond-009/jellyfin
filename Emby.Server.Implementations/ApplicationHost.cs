@@ -21,7 +21,6 @@ using Emby.Dlna.Ssdp;
 using Emby.Drawing;
 using Emby.Naming.Common;
 using Emby.Notifications;
-using Emby.Photos;
 using Emby.Server.Implementations.Archiving;
 using Emby.Server.Implementations.Channels;
 using Emby.Server.Implementations.Collections;
@@ -974,9 +973,6 @@ namespace Emby.Server.Implementations
 
             // Include composable parts in the Providers assembly
             yield return typeof(ProviderUtils).Assembly;
-
-            // Include composable parts in the Photos assembly
-            yield return typeof(PhotoProvider).Assembly;
 
             // Emby.Server implementations
             yield return typeof(InstallationManager).Assembly;

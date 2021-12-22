@@ -24,7 +24,6 @@ using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.Session;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Photo = MediaBrowser.Controller.Entities.Photo;
 
 namespace Emby.Dlna.PlayTo
 {
@@ -613,11 +612,6 @@ namespace Emby.Dlna.PlayTo
 
                     Profile = profile
                 };
-            }
-
-            if (string.Equals(item.MediaType, MediaType.Photo, StringComparison.OrdinalIgnoreCase))
-            {
-                return PlaylistItemFactory.Create((Photo)item, profile);
             }
 
             throw new ArgumentException("Unrecognized item type.");

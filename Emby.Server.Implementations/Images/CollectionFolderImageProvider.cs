@@ -50,13 +50,13 @@ namespace Emby.Server.Implementations.Images
             {
                 includeItemTypes = new[] { BaseItemKind.BoxSet };
             }
-            else if (string.Equals(viewType, CollectionType.HomeVideos, StringComparison.Ordinal) || string.Equals(viewType, CollectionType.Photos, StringComparison.Ordinal))
+            else if (string.Equals(viewType, CollectionType.HomeVideos, StringComparison.Ordinal))
             {
-                includeItemTypes = new[] { BaseItemKind.Video, BaseItemKind.Photo };
+                includeItemTypes = new[] { BaseItemKind.Video };
             }
             else
             {
-                includeItemTypes = new[] { BaseItemKind.Video, BaseItemKind.Audio, BaseItemKind.Photo, BaseItemKind.Movie, BaseItemKind.Series };
+                includeItemTypes = new[] { BaseItemKind.Video, BaseItemKind.Audio, BaseItemKind.Movie, BaseItemKind.Series };
             }
 
             var recursive = !string.Equals(CollectionType.Playlists, viewType, StringComparison.OrdinalIgnoreCase);

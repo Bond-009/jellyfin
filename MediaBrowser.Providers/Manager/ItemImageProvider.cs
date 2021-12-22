@@ -70,21 +70,11 @@ namespace MediaBrowser.Providers.Manager
         /// <returns><c>true</c> if changes were made to the item; otherwise <c>false</c>.</returns>
         public bool ValidateImages(BaseItem item, IEnumerable<IImageProvider> providers, IDirectoryService directoryService)
         {
-            var hasChanges = false;
+            var images = providers.OfType<ILocalImageProvider>()
+                .SelectMany(i => i.GetImages(item, directoryService))
+                .ToList();
 
-            if (item is not Photo)
-            {
-                var images = providers.OfType<ILocalImageProvider>()
-                    .SelectMany(i => i.GetImages(item, directoryService))
-                    .ToList();
-
-                if (MergeImages(item, images))
-                {
-                    hasChanges = true;
-                }
-            }
-
-            return hasChanges;
+            return MergeImages(item, images);
         }
 
         /// <summary>

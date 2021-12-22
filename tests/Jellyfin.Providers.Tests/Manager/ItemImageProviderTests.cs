@@ -30,15 +30,6 @@ namespace Jellyfin.Providers.Tests.Manager
         private const string TestDataImagePath = "Test Data/Images/blank{0}.jpg";
 
         [Fact]
-        public void ValidateImages_PhotoEmptyProviders_NoChange()
-        {
-            var itemImageProvider = GetItemImageProvider(null, null);
-            var changed = itemImageProvider.ValidateImages(new Photo(), Enumerable.Empty<ILocalImageProvider>(), null);
-
-            Assert.False(changed);
-        }
-
-        [Fact]
         public void ValidateImages_EmptyItemEmptyProviders_NoChange()
         {
             var itemImageProvider = GetItemImageProvider(null, null);
