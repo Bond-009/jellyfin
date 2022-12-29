@@ -14,9 +14,9 @@ namespace Emby.Dlna.PlayTo
     {
         private const string CommandBase = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n" + "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" SOAP-ENV:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">" + "<SOAP-ENV:Body>" + "<m:{0} xmlns:m=\"{1}\">" + "{2}" + "</m:{0}>" + "</SOAP-ENV:Body></SOAP-ENV:Envelope>";
 
-        public List<StateVariable> StateVariables { get; } = new List<StateVariable>();
+        public IList<StateVariable> StateVariables { get; } = new List<StateVariable>();
 
-        public List<ServiceAction> ServiceActions { get; } = new List<ServiceAction>();
+        public IList<ServiceAction> ServiceActions { get; } = new List<ServiceAction>();
 
         public static TransportCommands Create(XDocument document)
         {
@@ -150,9 +150,9 @@ namespace Emby.Dlna.PlayTo
                 {
                     stateString += BuildArgumentXml(arg, "0");
                 }
-                else if (dictionary.ContainsKey(arg.Name))
+                else if (dictionary.TryGetValue(arg.Name, out var v))
                 {
-                    stateString += BuildArgumentXml(arg, dictionary[arg.Name]);
+                    stateString += BuildArgumentXml(arg, v);
                 }
                 else
                 {

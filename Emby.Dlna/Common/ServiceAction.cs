@@ -23,7 +23,7 @@ namespace Emby.Dlna.Common
         /// <summary>
         /// Gets the ArgumentList.
         /// </summary>
-        public List<Argument> ArgumentList { get; }
+        public IList<Argument> ArgumentList { get; }
 
         /// <inheritdoc />
         public override string ToString() => Name;

@@ -46,7 +46,7 @@ namespace Emby.Dlna.PlayTo
 
         public DeviceIcon Icon { get; set; }
 
-        public List<DeviceService> Services => _services;
+        public IList<DeviceService> Services => _services;
 
         public DeviceIdentification ToDeviceIdentification()
         {
