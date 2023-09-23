@@ -62,7 +62,9 @@ public class MusicBrainzArtistProvider : IRemoteMetadataProvider<MusicArtist, Ar
         }
 
         Query.DelayBetweenRequests = configuration.RateLimit;
+        var old = _musicBrainzQuery;
         _musicBrainzQuery = new Query();
+        old.Dispose();
     }
 
     /// <inheritdoc />

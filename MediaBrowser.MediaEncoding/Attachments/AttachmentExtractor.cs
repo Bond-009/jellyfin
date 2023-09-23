@@ -130,7 +130,7 @@ namespace MediaBrowser.MediaEncoding.Attachments
 
                     if (Directory.Exists(outputPath))
                     {
-                        File.Create(Path.Join(outputPath, id));
+                        await File.Create(Path.Join(outputPath, id)).DisposeAsync().ConfigureAwait(false);
                     }
                 }
             }

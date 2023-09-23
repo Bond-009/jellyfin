@@ -118,6 +118,7 @@ namespace MediaBrowser.MediaEncoding.Subtitles
             }
         }
 
+#pragma warning disable IDISP015 // Member should not return created and cached instance
         async Task<Stream> ISubtitleEncoder.GetSubtitles(BaseItem item, string mediaSourceId, int subtitleStreamIndex, string outputFormat, long startTimeTicks, long endTimeTicks, bool preserveOriginalTimestamps, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(item);
@@ -152,6 +153,7 @@ namespace MediaBrowser.MediaEncoding.Subtitles
                 return ConvertSubtitles(stream, inputFormat, outputFormat, startTimeTicks, endTimeTicks, preserveOriginalTimestamps, cancellationToken);
             }
         }
+#pragma warning restore IDISP015
 
         private async Task<(Stream Stream, string Format)> GetSubtitleStream(
             MediaSourceInfo mediaSource,

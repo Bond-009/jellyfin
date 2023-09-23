@@ -2534,12 +2534,12 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
 
             if (disposing)
             {
-                _recordingDeleteSemaphore.Dispose();
-            }
+                foreach (var pair in _activeRecordings.ToList())
+                {
+                    pair.Value.CancellationTokenSource.Cancel();
+                }
 
-            foreach (var pair in _activeRecordings.ToList())
-            {
-                pair.Value.CancellationTokenSource.Cancel();
+                _recordingDeleteSemaphore.Dispose();
             }
 
             _disposed = true;

@@ -405,7 +405,8 @@ namespace MediaBrowser.LocalMetadata.Parsers
                     {
                         // This is one of the mis-named "Actors" full nodes created by MB2
                         // Create a reader and pass it to the persons node processor
-                        using var xmlReader = XmlReader.Create(new StringReader($"<Persons>{actors}</Persons>"));
+                        using var stringReader = new StringReader($"<Persons>{actors}</Persons>");
+                        using var xmlReader = XmlReader.Create(stringReader);
                         FetchDataFromPersonsNode(xmlReader, itemResult);
                     }
                     else

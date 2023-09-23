@@ -65,7 +65,9 @@ public class MusicBrainzAlbumProvider : IRemoteMetadataProvider<MusicAlbum, Albu
         }
 
         Query.DelayBetweenRequests = configuration.RateLimit;
+        var old = _musicBrainzQuery;
         _musicBrainzQuery = new Query();
+        old.Dispose();
     }
 
     /// <inheritdoc />

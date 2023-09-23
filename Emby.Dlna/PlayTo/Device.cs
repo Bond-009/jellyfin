@@ -84,7 +84,7 @@ namespace Emby.Dlna.PlayTo
         public void Start()
         {
             _logger.LogDebug("Dlna Device.Start");
-            _timer = new Timer(TimerCallback, null, 1000, Timeout.Infinite);
+            _timer ??= new Timer(TimerCallback, null, 1000, Timeout.Infinite);
         }
 
         private Task RefreshVolumeIfNeeded()
@@ -1255,7 +1255,6 @@ namespace Emby.Dlna.PlayTo
             }
 
             _timer = null;
-            Properties = null!;
 
             _disposed = true;
         }

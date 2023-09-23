@@ -13,7 +13,7 @@ namespace Jellyfin.Server.Implementations.Users
     /// <summary>
     /// Manages the storage and retrieval of display preferences through Entity Framework.
     /// </summary>
-    public class DisplayPreferencesManager : IDisplayPreferencesManager
+    public sealed class DisplayPreferencesManager : IDisplayPreferencesManager, IDisposable
     {
         private readonly JellyfinDbContext _dbContext;
 
@@ -96,6 +96,12 @@ namespace Jellyfin.Server.Implementations.Users
         public void SaveChanges()
         {
             _dbContext.SaveChanges();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            _dbContext.Dispose();
         }
     }
 }

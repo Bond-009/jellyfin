@@ -183,7 +183,7 @@ namespace MediaBrowser.Providers.MediaInfo
         /// <param name="audio">The <see cref="Audio"/>.</param>
         private void FetchDataFromTags(Audio audio)
         {
-            var file = TagLib.File.Create(audio.Path);
+            using var file = TagLib.File.Create(audio.Path);
             var tagTypes = file.TagTypesOnDisk;
             Tag? tags = null;
 
