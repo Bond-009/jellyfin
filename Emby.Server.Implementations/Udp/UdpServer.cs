@@ -29,7 +29,6 @@ namespace Emby.Server.Implementations.Udp
 
         private Socket _udpSocket;
         private IPEndPoint _endpoint;
-        private bool _disposed = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UdpServer" /> class.
@@ -120,14 +119,8 @@ namespace Emby.Server.Implementations.Udp
         /// <inheritdoc />
         public void Dispose()
         {
-            if (_disposed)
-            {
-                return;
-            }
-
             _udpSocket?.Dispose();
-
-            GC.SuppressFinalize(this);
+            _udpSocket = null!;
         }
     }
 }

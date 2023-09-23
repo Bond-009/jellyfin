@@ -212,9 +212,12 @@ namespace Emby.Server.Implementations.ScheduledTasks
         /// <param name="dispose"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         protected virtual void Dispose(bool dispose)
         {
-            foreach (var task in ScheduledTasks)
+            if (dispose)
             {
-                task.Dispose();
+                foreach (var task in ScheduledTasks)
+                {
+                    task.Dispose();
+                }
             }
         }
 

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
@@ -245,10 +246,10 @@ namespace Emby.Server.Implementations.LiveTv
 
                 liveStream = new ExclusiveLiveStream(info, closeFn);
 
-                var startTime = DateTime.UtcNow;
+                var stopwatch = Stopwatch.StartNew();
                 await liveStream.Open(cancellationToken).ConfigureAwait(false);
-                var endTime = DateTime.UtcNow;
-                _logger.LogInformation("Live stream opened after {0}ms", (endTime - startTime).TotalMilliseconds);
+                stopwatch.Stop();
+                _logger.LogInformation("Live stream opened after {0}ms", stopwatch.ElapsedMilliseconds);
             }
 
             info.RequiresClosing = true;

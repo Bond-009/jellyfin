@@ -30,23 +30,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
-  <!-- Code Analyzers-->
-  <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <PackageReference Include="IDisposableAnalyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SerilogAnalyzer" PrivateAssets="All" />
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="All" />
-    <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" PrivateAssets="All" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Plugins\AudioDb\Configuration\config.html" />

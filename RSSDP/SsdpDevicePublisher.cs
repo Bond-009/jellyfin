@@ -568,6 +568,7 @@ namespace Rssdp.Infrastructure
             {
                 LogFunction(text);
             }
+
             // System.Diagnostics.Debug.WriteLine(text, "SSDP Publisher");
         }
 

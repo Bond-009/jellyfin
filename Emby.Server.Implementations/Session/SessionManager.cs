@@ -171,12 +171,11 @@ namespace Emby.Server.Implementations.Session
 
             if (disposing)
             {
+                _deviceManager.DeviceOptionsUpdated -= OnDeviceManagerDeviceOptionsUpdated;
                 _idleTimer?.Dispose();
             }
 
             _idleTimer = null;
-
-            _deviceManager.DeviceOptionsUpdated -= OnDeviceManagerDeviceOptionsUpdated;
 
             _disposed = true;
         }

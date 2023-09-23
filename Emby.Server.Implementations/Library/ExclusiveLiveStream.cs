@@ -51,5 +51,16 @@ namespace Emby.Server.Implementations.Library
         {
             return Task.CompletedTask;
         }
+
+        protected virtual void Dispose(bool disposing)
+        {
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

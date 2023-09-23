@@ -19,6 +19,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
     public class LiveStream : ILiveStream
     {
         private readonly IConfigurationManager _configurationManager;
+        private bool _disposed;
 
         public LiveStream(
             MediaSourceInfo mediaSource,
@@ -157,6 +158,28 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
             {
                 Logger.LogError(ex, "Error seeking stream");
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                LiveStreamCancellationTokenSource.Dispose();
+            }
+
+            _disposed = true;
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -619,13 +619,15 @@ namespace Emby.Server.Implementations.LiveTv.Listings
 
             // Response is automatically disposed in the calling function,
             // so dispose manually if not returning.
-            response.Dispose();
-            if (!enableRetry || (int)response.StatusCode >= 500)
+            using (response)
             {
-                throw new HttpRequestException(
-                    string.Format(CultureInfo.InvariantCulture, "Request failed: {0}", response.ReasonPhrase),
-                    null,
-                    response.StatusCode);
+                if (!enableRetry || (int)response.StatusCode >= 500)
+                {
+                    throw new HttpRequestException(
+                        string.Format(CultureInfo.InvariantCulture, "Request failed: {0}", response.ReasonPhrase),
+                        null,
+                        response.StatusCode);
+                }
             }
 
             _tokens.Clear();

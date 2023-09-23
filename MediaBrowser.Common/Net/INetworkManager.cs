@@ -11,7 +11,7 @@ namespace MediaBrowser.Common.Net
     /// <summary>
     /// Interface for the NetworkManager class.
     /// </summary>
-    public interface INetworkManager
+    public interface INetworkManager : IDisposable
     {
         /// <summary>
         /// Event triggered on network changes.

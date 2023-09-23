@@ -16,7 +16,7 @@ namespace Emby.Server.Implementations.SyncPlay
     /// <summary>
     /// Class SyncPlayManager.
     /// </summary>
-    public class SyncPlayManager : ISyncPlayManager, IDisposable
+    public sealed class SyncPlayManager : ISyncPlayManager, IDisposable
     {
         /// <summary>
         /// The logger.
@@ -69,8 +69,6 @@ namespace Emby.Server.Implementations.SyncPlay
         /// </remarks>
         private readonly object _groupsLock = new object();
 
-        private bool _disposed = false;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SyncPlayManager" /> class.
         /// </summary>
@@ -95,8 +93,7 @@ namespace Emby.Server.Implementations.SyncPlay
         /// <inheritdoc />
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            _sessionManager.SessionEnded -= OnSessionEnded;
         }
 
         /// <inheritdoc />
@@ -341,21 +338,6 @@ namespace Emby.Server.Implementations.SyncPlay
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Releases unmanaged and optionally managed resources.
-        /// </summary>
-        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _sessionManager.SessionEnded -= OnSessionEnded;
-            _disposed = true;
         }
 
         private void OnSessionEnded(object sender, SessionEventArgs e)

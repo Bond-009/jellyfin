@@ -1123,6 +1123,9 @@ namespace Emby.Server.Implementations
 
             if (dispose)
             {
+                NetManager?.Dispose();
+                Certificate?.Dispose();
+
                 var type = GetType();
 
                 Logger.LogInformation("Disposing {Type}", type.Name);
@@ -1148,6 +1151,15 @@ namespace Emby.Server.Implementations
                 }
 
                 _disposableParts.Clear();
+
+                if (_sessionManager is not null)
+                {
+                    // used for closing websockets
+                    foreach (var session in _sessionManager.Sessions)
+                    {
+                        session.Dispose();
+                    }
+                }
             }
 
             _disposed = true;
@@ -1166,6 +1178,9 @@ namespace Emby.Server.Implementations
         /// <returns>A ValueTask.</returns>
         protected virtual async ValueTask DisposeAsyncCore()
         {
+            NetManager?.Dispose();
+            Certificate?.Dispose();
+
             var type = GetType();
 
             Logger.LogInformation("Disposing {Type}", type.Name);
@@ -1189,6 +1204,8 @@ namespace Emby.Server.Implementations
                     Logger.LogError(ex, "Error disposing {Type}", partType.Name);
                 }
             }
+
+            _disposableParts.Clear();
 
             if (_sessionManager is not null)
             {

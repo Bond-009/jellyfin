@@ -22,7 +22,7 @@ namespace Jellyfin.Networking.Manager
     /// <summary>
     /// Class to take care of network interface management.
     /// </summary>
-    public class NetworkManager : INetworkManager, IDisposable
+    public class NetworkManager : INetworkManager
     {
         /// <summary>
         /// Threading lock for network properties.

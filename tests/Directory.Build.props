@@ -9,15 +9,4 @@
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)/jellyfin-tests.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
-  <!-- Code Analyzers -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="SerilogAnalyzer" PrivateAssets="All" />
-    <PackageReference Include="StyleCop.Analyzers" PrivateAssets="All" />
-    <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" PrivateAssets="All" />
-  </ItemGroup>
-
 </Project>

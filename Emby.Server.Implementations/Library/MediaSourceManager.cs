@@ -814,6 +814,7 @@ namespace Emby.Server.Implementations.Library
                         _logger.LogInformation("Closing live stream {0}", id);
 
                         await liveStream.Close().ConfigureAwait(false);
+                        liveStream.Dispose();
                         _logger.LogInformation("Live stream {0} closed successfully", id);
                     }
                 }

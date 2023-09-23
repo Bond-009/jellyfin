@@ -182,6 +182,8 @@
     <Rule Id="IDISP003" Action="Info" />
     <!-- disable warning IDISP004: Don't ignore created IDisposable -->
     <Rule Id="IDISP004" Action="Info" />
+    <!-- disable warning IDISP005: Return type should indicate that the value should be disposed -->
+    <Rule Id="IDISP005" Action="Info" />
     <!-- disable warning IDISP007: Don't dispose injected -->
     <Rule Id="IDISP007" Action="Info" />
     <!-- disable warning IDISP008: Don't assign member with injected and created disposables -->
