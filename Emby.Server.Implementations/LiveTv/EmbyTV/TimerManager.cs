@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -35,9 +36,9 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
 
         public void StopTimers()
         {
-            foreach (var pair in _timers.ToList())
+            foreach (var (_, timer) in _timers.ToList())
             {
-                pair.Value.Dispose();
+                timer.Dispose();
             }
 
             _timers.Clear();

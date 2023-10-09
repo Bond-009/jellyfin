@@ -17,21 +17,19 @@ using MediaBrowser.Controller.LiveTv;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.LiveTv;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Emby.Server.Implementations.LiveTv.TunerHosts
 {
     public abstract class BaseTunerHost
     {
-        private readonly ConcurrentDictionary<string, List<ChannelInfo>> _cache;
+        private readonly ConcurrentDictionary<string, List<ChannelInfo>> _cache = new ConcurrentDictionary<string, List<ChannelInfo>>();
 
         protected BaseTunerHost(IServerConfigurationManager config, ILogger<BaseTunerHost> logger, IFileSystem fileSystem)
         {
             Config = config;
             Logger = logger;
             FileSystem = fileSystem;
-            _cache = new ConcurrentDictionary<string, List<ChannelInfo>>();
         }
 
         protected IServerConfigurationManager Config { get; }
@@ -58,7 +56,7 @@ namespace Emby.Server.Implementations.LiveTv.TunerHosts
             }
 
             var list = await GetChannelsInternal(tuner, cancellationToken).ConfigureAwait(false);
-            // logger.LogInformation("Channels from {0}: {1}", tuner.Url, JsonSerializer.SerializeToString(list));
+            Logger.LogInformation("Channels from {TunerUrl}: {@Channels}", tuner.Url, list);
 
             if (!string.IsNullOrEmpty(key) && list.Count > 0)
             {

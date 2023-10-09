@@ -17,11 +17,11 @@ namespace MediaBrowser.Common.Extensions
         /// <param name="timeout">The duration to wait before cancelling waiting for the task.</param>
         /// <returns>True if the task exited normally, false if the timeout elapsed before the process exited.</returns>
         /// <exception cref="InvalidOperationException">If <see cref="Process.EnableRaisingEvents"/> is not set to true for the process.</exception>
-        public static async Task<bool> WaitForExitAsync(this Process process, TimeSpan timeout)
+        public static Task<bool> WaitForExitAsync(this Process process, TimeSpan timeout)
         {
             using (var cancelTokenSource = new CancellationTokenSource(timeout))
             {
-                return await WaitForExitAsync(process, cancelTokenSource.Token).ConfigureAwait(false);
+                return WaitForExitAsync(process, cancelTokenSource.Token);
             }
         }
 
@@ -31,7 +31,7 @@ namespace MediaBrowser.Common.Extensions
         /// <param name="process">The process to wait for.</param>
         /// <param name="cancelToken">A <see cref="CancellationToken"/> to observe while waiting for the process to exit.</param>
         /// <returns>True if the task exited normally, false if cancelled before the process exited.</returns>
-        public static async Task<bool> WaitForExitAsync(this Process process, CancellationToken cancelToken)
+        public static Task<bool> WaitForExitAsync(this Process process, CancellationToken cancelToken)
         {
             if (!process.EnableRaisingEvents)
             {
@@ -45,13 +45,13 @@ namespace MediaBrowser.Common.Extensions
             // Return immediately if the process has already exited
             if (process.HasExitedSafe())
             {
-                return true;
+                return Task.FromResult(true);
             }
 
             // Register with the cancellation token then await
             using (var cancelRegistration = cancelToken.Register(() => tcs.TrySetResult(process.HasExitedSafe())))
             {
-                return await tcs.Task.ConfigureAwait(false);
+                return tcs.Task;
             }
         }
 

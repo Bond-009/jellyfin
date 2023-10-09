@@ -563,11 +563,7 @@ namespace Emby.Server.Implementations.LiveTv.Listings
                 return null;
             }
 
-            if (!_tokens.TryGetValue(username, out NameValuePair savedToken))
-            {
-                savedToken = new NameValuePair();
-                _tokens.TryAdd(username, savedToken);
-            }
+            var savedToken = _tokens.GetOrAdd(username, new NameValuePair());
 
             if (!string.IsNullOrEmpty(savedToken.Name)
                 && long.TryParse(savedToken.Value, CultureInfo.InvariantCulture, out long ticks))

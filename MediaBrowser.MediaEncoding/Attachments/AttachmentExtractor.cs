@@ -1,7 +1,6 @@
 #pragma warning disable CS1591
 
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -29,9 +28,6 @@ namespace MediaBrowser.MediaEncoding.Attachments
         private readonly IFileSystem _fileSystem;
         private readonly IMediaEncoder _mediaEncoder;
         private readonly IMediaSourceManager _mediaSourceManager;
-
-        private readonly ConcurrentDictionary<string, SemaphoreSlim> _semaphoreLocks =
-            new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public AttachmentExtractor(
             ILogger<AttachmentExtractor> logger,
@@ -84,24 +80,13 @@ namespace MediaBrowser.MediaEncoding.Attachments
             string outputPath,
             CancellationToken cancellationToken)
         {
-            var semaphore = _semaphoreLocks.GetOrAdd(outputPath, key => new SemaphoreSlim(1, 1));
-
-            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-            try
+            if (!Directory.Exists(outputPath))
             {
-                if (!Directory.Exists(outputPath))
-                {
-                    await ExtractAllAttachmentsInternal(
-                        _mediaEncoder.GetInputArgument(inputFile, mediaSource),
-                        outputPath,
-                        false,
-                        cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                semaphore.Release();
+                await ExtractAllAttachmentsInternal(
+                    _mediaEncoder.GetInputArgument(inputFile, mediaSource),
+                    outputPath,
+                    false,
+                    cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -111,29 +96,18 @@ namespace MediaBrowser.MediaEncoding.Attachments
             string outputPath,
             CancellationToken cancellationToken)
         {
-            var semaphore = _semaphoreLocks.GetOrAdd(outputPath, key => new SemaphoreSlim(1, 1));
-
-            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-            try
+            if (!File.Exists(Path.Join(outputPath, id)))
             {
-                if (!File.Exists(Path.Join(outputPath, id)))
+                await ExtractAllAttachmentsInternal(
+                    inputArgument,
+                    outputPath,
+                    true,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (Directory.Exists(outputPath))
                 {
-                    await ExtractAllAttachmentsInternal(
-                        inputArgument,
-                        outputPath,
-                        true,
-                        cancellationToken).ConfigureAwait(false);
-
-                    if (Directory.Exists(outputPath))
-                    {
-                        File.Create(Path.Join(outputPath, id));
-                    }
+                    File.Create(Path.Join(outputPath, id));
                 }
-            }
-            finally
-            {
-                semaphore.Release();
             }
         }
 
@@ -174,6 +148,7 @@ namespace MediaBrowser.MediaEncoding.Attachments
 
                 process.Start();
 
+                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
                 var ranToCompletion = await ProcessExtensions.WaitForExitAsync(process, cancellationToken).ConfigureAwait(false);
 
                 if (!ranToCompletion)
@@ -262,24 +237,13 @@ namespace MediaBrowser.MediaEncoding.Attachments
             string outputPath,
             CancellationToken cancellationToken)
         {
-            var semaphore = _semaphoreLocks.GetOrAdd(outputPath, key => new SemaphoreSlim(1, 1));
-
-            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-            try
+            if (!File.Exists(outputPath))
             {
-                if (!File.Exists(outputPath))
-                {
-                    await ExtractAttachmentInternal(
-                        _mediaEncoder.GetInputArgument(inputFile, mediaSource),
-                        attachmentStreamIndex,
-                        outputPath,
-                        cancellationToken).ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                semaphore.Release();
+                await ExtractAttachmentInternal(
+                    _mediaEncoder.GetInputArgument(inputFile, mediaSource),
+                    attachmentStreamIndex,
+                    outputPath,
+                    cancellationToken).ConfigureAwait(false);
             }
         }
 
