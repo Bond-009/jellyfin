@@ -38,6 +38,7 @@ namespace Emby.Server.Implementations.Playlists
         private readonly IUserManager _userManager;
         private readonly IProviderManager _providerManager;
         private readonly IConfiguration _appConfig;
+        private readonly IDirectoryService _directoryService;
 
         public PlaylistManager(
             ILibraryManager libraryManager,
@@ -46,7 +47,8 @@ namespace Emby.Server.Implementations.Playlists
             ILogger<PlaylistManager> logger,
             IUserManager userManager,
             IProviderManager providerManager,
-            IConfiguration appConfig)
+            IConfiguration appConfig,
+            IDirectoryService directoryService)
         {
             _libraryManager = libraryManager;
             _fileSystem = fileSystem;
@@ -55,6 +57,7 @@ namespace Emby.Server.Implementations.Playlists
             _userManager = userManager;
             _providerManager = providerManager;
             _appConfig = appConfig;
+            _directoryService = directoryService;
         }
 
         public IEnumerable<Playlist> GetPlaylists(Guid userId)
@@ -138,7 +141,7 @@ namespace Emby.Server.Implementations.Playlists
                 playlist.SetMediaType(options.MediaType);
                 parentFolder.AddChild(playlist);
 
-                await playlist.RefreshMetadata(new MetadataRefreshOptions(new DirectoryService(_fileSystem)) { ForceSave = true }, CancellationToken.None)
+                await playlist.RefreshMetadata(new MetadataRefreshOptions(_directoryService) { ForceSave = true }, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 if (options.ItemIdList.Count > 0)
@@ -240,7 +243,7 @@ namespace Emby.Server.Implementations.Playlists
             // Refresh playlist metadata
             _providerManager.QueueRefresh(
                 playlist.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions(_directoryService)
                 {
                     ForceSave = true
                 },
@@ -273,7 +276,7 @@ namespace Emby.Server.Implementations.Playlists
 
             _providerManager.QueueRefresh(
                 playlist.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions(_directoryService)
                 {
                     ForceSave = true
                 },

@@ -27,7 +27,7 @@ public class CleanupCollectionAndPlaylistPathsTask : IScheduledTask
     private readonly IPlaylistManager _playlistManager;
     private readonly ILogger<CleanupCollectionAndPlaylistPathsTask> _logger;
     private readonly IProviderManager _providerManager;
-    private readonly IFileSystem _fileSystem;
+    private readonly IDirectoryService _directoryService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CleanupCollectionAndPlaylistPathsTask"/> class.
@@ -37,21 +37,21 @@ public class CleanupCollectionAndPlaylistPathsTask : IScheduledTask
     /// <param name="playlistManager">Instance of the <see cref="IPlaylistManager"/> interface.</param>
     /// <param name="logger">The logger.</param>
     /// <param name="providerManager">The provider manager.</param>
-    /// <param name="fileSystem">The filesystem.</param>
+    /// <param name="directoryService">The directory service.</param>
     public CleanupCollectionAndPlaylistPathsTask(
         ILocalizationManager localization,
         ICollectionManager collectionManager,
         IPlaylistManager playlistManager,
         ILogger<CleanupCollectionAndPlaylistPathsTask> logger,
         IProviderManager providerManager,
-        IFileSystem fileSystem)
+        IDirectoryService directoryService)
     {
         _localization = localization;
         _collectionManager = collectionManager;
         _playlistManager = playlistManager;
         _logger = logger;
         _providerManager = providerManager;
-        _fileSystem = fileSystem;
+        _directoryService = directoryService;
     }
 
     /// <inheritdoc />
@@ -130,7 +130,7 @@ public class CleanupCollectionAndPlaylistPathsTask : IScheduledTask
 
             _providerManager.QueueRefresh(
                 folder.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions(_directoryService)
                 {
                     ForceSave = true
                 },

@@ -22,6 +22,7 @@ namespace MediaBrowser.Providers.TV
     public class SeriesMetadataService : MetadataService<Series, SeriesInfo>
     {
         private readonly ILocalizationManager _localizationManager;
+        private readonly IDirectoryService _directoryService;
 
         public SeriesMetadataService(
             IServerConfigurationManager serverConfigurationManager,
@@ -29,10 +30,12 @@ namespace MediaBrowser.Providers.TV
             IProviderManager providerManager,
             IFileSystem fileSystem,
             ILibraryManager libraryManager,
-            ILocalizationManager localizationManager)
+            ILocalizationManager localizationManager,
+            IDirectoryService directoryService)
             : base(serverConfigurationManager, logger, providerManager, fileSystem, libraryManager)
         {
             _localizationManager = localizationManager;
+            _directoryService = directoryService;
         }
 
         /// <inheritdoc />
@@ -263,7 +266,7 @@ namespace MediaBrowser.Providers.TV
 
             series.AddChild(season);
 
-            await season.RefreshMetadata(new MetadataRefreshOptions(new DirectoryService(FileSystem)), cancellationToken).ConfigureAwait(false);
+            await season.RefreshMetadata(new MetadataRefreshOptions(_directoryService), cancellationToken).ConfigureAwait(false);
 
             return season;
         }

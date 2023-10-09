@@ -63,7 +63,6 @@ namespace Emby.Server.Implementations.Library
         private const string ShortcutFileExtension = ".mblink";
 
         private readonly ILogger<LibraryManager> _logger;
-        private readonly ConcurrentDictionary<Guid, BaseItem> _cache;
         private readonly ITaskManager _taskManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataRepository;
@@ -78,6 +77,9 @@ namespace Emby.Server.Implementations.Library
         private readonly IImageProcessor _imageProcessor;
         private readonly NamingOptions _namingOptions;
         private readonly ExtraResolver _extraResolver;
+        private readonly IDirectoryService _directoryService;
+
+        private readonly ConcurrentDictionary<Guid, BaseItem> _cache = new ConcurrentDictionary<Guid, BaseItem>();
 
         /// <summary>
         /// The _root folder sync lock.
@@ -143,8 +145,8 @@ namespace Emby.Server.Implementations.Library
             _mediaEncoder = mediaEncoder;
             _itemRepository = itemRepository;
             _imageProcessor = imageProcessor;
-            _cache = new ConcurrentDictionary<Guid, BaseItem>();
             _namingOptions = namingOptions;
+            _directoryService = directoryService;
 
             _extraResolver = new ExtraResolver(loggerFactory.CreateLogger<ExtraResolver>(), namingOptions, directoryService);
 
@@ -518,7 +520,7 @@ namespace Emby.Server.Implementations.Library
         }
 
         public BaseItem ResolvePath(FileSystemMetadata fileInfo, Folder parent = null, IDirectoryService directoryService = null)
-            => ResolvePath(fileInfo, directoryService ?? new DirectoryService(_fileSystem), null, parent);
+            => ResolvePath(fileInfo, directoryService ?? _directoryService, null, parent);
 
         private BaseItem ResolvePath(
             FileSystemMetadata fileInfo,
@@ -977,7 +979,7 @@ namespace Emby.Server.Implementations.Library
             // Ensure the location is available.
             Directory.CreateDirectory(_configurationManager.ApplicationPaths.PeoplePath);
 
-            return new PeopleValidator(this, _logger, _fileSystem).ValidatePeople(cancellationToken, progress);
+            return new PeopleValidator(this, _logger, _directoryService).ValidatePeople(cancellationToken, progress);
         }
 
         /// <summary>
@@ -1023,7 +1025,7 @@ namespace Emby.Server.Implementations.Library
             // Start by just validating the children of the root, but go no further
             await RootFolder.ValidateChildren(
                 new SimpleProgress<double>(),
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem)),
+                new MetadataRefreshOptions(_directoryService),
                 recursive: false,
                 cancellationToken).ConfigureAwait(false);
 
@@ -1031,7 +1033,7 @@ namespace Emby.Server.Implementations.Library
 
             await GetUserRootFolder().ValidateChildren(
                 new SimpleProgress<double>(),
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem)),
+                new MetadataRefreshOptions(_directoryService),
                 recursive: false,
                 cancellationToken).ConfigureAwait(false);
 
@@ -1053,7 +1055,7 @@ namespace Emby.Server.Implementations.Library
             innerProgress.RegisterAction(pct => progress.Report(pct * 0.96));
 
             // Validate the entire media library
-            await RootFolder.ValidateChildren(innerProgress, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), recursive: true, cancellationToken).ConfigureAwait(false);
+            await RootFolder.ValidateChildren(innerProgress, new MetadataRefreshOptions(_directoryService), recursive: true, cancellationToken).ConfigureAwait(false);
 
             progress.Report(96);
 
@@ -2197,7 +2199,7 @@ namespace Emby.Server.Implementations.Library
             if (refresh)
             {
                 item.UpdateToRepositoryAsync(ItemUpdateType.MetadataImport, CancellationToken.None).GetAwaiter().GetResult();
-                ProviderManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.Normal);
+                ProviderManager.QueueRefresh(item.Id, new MetadataRefreshOptions(_directoryService), RefreshPriority.Normal);
             }
 
             return item;
@@ -2256,7 +2258,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions(_directoryService)
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true
@@ -2320,7 +2322,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions(_directoryService)
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true
@@ -2396,7 +2398,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions(_directoryService)
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true

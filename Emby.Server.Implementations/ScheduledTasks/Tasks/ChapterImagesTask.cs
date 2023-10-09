@@ -30,7 +30,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
         private readonly IItemRepository _itemRepo;
         private readonly IApplicationPaths _appPaths;
         private readonly IEncodingManager _encodingManager;
-        private readonly IFileSystem _fileSystem;
+        private readonly IDirectoryService _directoryService;
         private readonly ILocalizationManager _localization;
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
         /// <param name="itemRepo">The item repository.</param>
         /// <param name="appPaths">The application paths.</param>
         /// <param name="encodingManager">The encoding manager.</param>
-        /// <param name="fileSystem">The filesystem.</param>
+        /// <param name="directoryService">The directory service.</param>
         /// <param name="localization">The localization manager.</param>
         public ChapterImagesTask(
             ILogger<ChapterImagesTask> logger,
@@ -49,7 +49,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
             IItemRepository itemRepo,
             IApplicationPaths appPaths,
             IEncodingManager encodingManager,
-            IFileSystem fileSystem,
+            IDirectoryService directoryService,
             ILocalizationManager localization)
         {
             _logger = logger;
@@ -57,7 +57,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
             _itemRepo = itemRepo;
             _appPaths = appPaths;
             _encodingManager = encodingManager;
-            _fileSystem = fileSystem;
+            _directoryService = directoryService;
             _localization = localization;
         }
 
@@ -129,8 +129,6 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
                 previouslyFailedImages = new List<string>();
             }
 
-            var directoryService = new DirectoryService(_fileSystem);
-
             foreach (var video in videos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -143,7 +141,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
                 {
                     var chapters = _itemRepo.GetChapters(video);
 
-                    var success = await _encodingManager.RefreshChapterImages(video, directoryService, chapters, extract, true, cancellationToken).ConfigureAwait(false);
+                    var success = await _encodingManager.RefreshChapterImages(video, _directoryService, chapters, extract, true, cancellationToken).ConfigureAwait(false);
 
                     if (!success)
                     {

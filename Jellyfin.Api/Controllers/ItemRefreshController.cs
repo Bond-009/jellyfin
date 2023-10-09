@@ -20,22 +20,22 @@ public class ItemRefreshController : BaseJellyfinApiController
 {
     private readonly ILibraryManager _libraryManager;
     private readonly IProviderManager _providerManager;
-    private readonly IFileSystem _fileSystem;
+    private readonly IDirectoryService _directoryService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ItemRefreshController"/> class.
     /// </summary>
     /// <param name="libraryManager">Instance of <see cref="ILibraryManager"/> interface.</param>
     /// <param name="providerManager">Instance of <see cref="IProviderManager"/> interface.</param>
-    /// <param name="fileSystem">Instance of <see cref="IFileSystem"/> interface.</param>
+    /// <param name="directoryService">Instance of <see cref="IDirectoryService"/> interface.</param>
     public ItemRefreshController(
         ILibraryManager libraryManager,
         IProviderManager providerManager,
-        IFileSystem fileSystem)
+        IDirectoryService directoryService)
     {
         _libraryManager = libraryManager;
         _providerManager = providerManager;
-        _fileSystem = fileSystem;
+        _directoryService = directoryService;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public class ItemRefreshController : BaseJellyfinApiController
             return NotFound();
         }
 
-        var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+        var refreshOptions = new MetadataRefreshOptions(_directoryService)
         {
             MetadataRefreshMode = metadataRefreshMode,
             ImageRefreshMode = imageRefreshMode,

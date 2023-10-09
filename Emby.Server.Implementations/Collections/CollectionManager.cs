@@ -31,6 +31,7 @@ namespace Emby.Server.Implementations.Collections
         private readonly IProviderManager _providerManager;
         private readonly ILocalizationManager _localizationManager;
         private readonly IApplicationPaths _appPaths;
+        private readonly IDirectoryService _directoryService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CollectionManager"/> class.
@@ -40,24 +41,27 @@ namespace Emby.Server.Implementations.Collections
         /// <param name="localizationManager">The localization manager.</param>
         /// <param name="fileSystem">The filesystem.</param>
         /// <param name="iLibraryMonitor">The library monitor.</param>
-        /// <param name="loggerFactory">The logger factory.</param>
+        /// <param name="logger">The logger.</param>
         /// <param name="providerManager">The provider manager.</param>
+        /// <param name="directoryService">The directory service.</param>
         public CollectionManager(
             ILibraryManager libraryManager,
             IApplicationPaths appPaths,
             ILocalizationManager localizationManager,
             IFileSystem fileSystem,
             ILibraryMonitor iLibraryMonitor,
-            ILoggerFactory loggerFactory,
-            IProviderManager providerManager)
+            ILogger<CollectionManager> logger,
+            IProviderManager providerManager,
+            IDirectoryService directoryService)
         {
             _libraryManager = libraryManager;
             _fileSystem = fileSystem;
             _iLibraryMonitor = iLibraryMonitor;
-            _logger = loggerFactory.CreateLogger<CollectionManager>();
+            _logger = logger;
             _providerManager = providerManager;
             _localizationManager = localizationManager;
             _appPaths = appPaths;
+            _directoryService = directoryService;
         }
 
         /// <inheritdoc />
@@ -169,7 +173,7 @@ namespace Emby.Server.Implementations.Collections
                         collection.Id,
                         options.ItemIdList.Select(x => new Guid(x)),
                         false,
-                        new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                        new MetadataRefreshOptions(_directoryService)
                         {
                             // The initial adding of items is going to create a local metadata file
                             // This will cause internet metadata to be skipped as a result
@@ -178,7 +182,7 @@ namespace Emby.Server.Implementations.Collections
                 }
                 else
                 {
-                    _providerManager.QueueRefresh(collection.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+                    _providerManager.QueueRefresh(collection.Id, new MetadataRefreshOptions(_directoryService), RefreshPriority.High);
                 }
 
                 CollectionCreated?.Invoke(this, new CollectionCreatedEventArgs
@@ -198,7 +202,7 @@ namespace Emby.Server.Implementations.Collections
 
         /// <inheritdoc />
         public Task AddToCollectionAsync(Guid collectionId, IEnumerable<Guid> itemIds)
-            => AddToCollectionAsync(collectionId, itemIds, true, new MetadataRefreshOptions(new DirectoryService(_fileSystem)));
+            => AddToCollectionAsync(collectionId, itemIds, true, new MetadataRefreshOptions(_directoryService));
 
         private async Task AddToCollectionAsync(Guid collectionId, IEnumerable<Guid> ids, bool fireEvent, MetadataRefreshOptions refreshOptions)
         {
@@ -294,7 +298,7 @@ namespace Emby.Server.Implementations.Collections
             await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
             _providerManager.QueueRefresh(
                 collection.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions(_directoryService)
                 {
                     ForceSave = true
                 },

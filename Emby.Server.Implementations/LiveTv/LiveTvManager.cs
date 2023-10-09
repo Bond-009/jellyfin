@@ -58,6 +58,7 @@ namespace Emby.Server.Implementations.LiveTv
         private readonly IFileSystem _fileSystem;
         private readonly IChannelManager _channelManager;
         private readonly LiveTvDtoService _tvDtoService;
+        private readonly IDirectoryService _directoryService;
 
         private ILiveTvService[] _services = Array.Empty<ILiveTvService>();
         private ITunerHost[] _tunerHosts = Array.Empty<ITunerHost>();
@@ -75,7 +76,8 @@ namespace Emby.Server.Implementations.LiveTv
             ILocalizationManager localization,
             IFileSystem fileSystem,
             IChannelManager channelManager,
-            LiveTvDtoService liveTvDtoService)
+            LiveTvDtoService liveTvDtoService,
+            IDirectoryService directoryService)
         {
             _config = config;
             _logger = logger;
@@ -89,6 +91,7 @@ namespace Emby.Server.Implementations.LiveTv
             _userDataManager = userDataManager;
             _channelManager = channelManager;
             _tvDtoService = liveTvDtoService;
+            _directoryService = directoryService;
         }
 
         public event EventHandler<GenericEventArgs<TimerEventInfo>> SeriesTimerCancelled;
@@ -1231,7 +1234,7 @@ namespace Emby.Server.Implementations.LiveTv
 
                     await currentChannel.UpdateToRepositoryAsync(ItemUpdateType.MetadataImport, cancellationToken).ConfigureAwait(false);
                     await currentChannel.RefreshMetadata(
-                        new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                        new MetadataRefreshOptions(_directoryService)
                         {
                             ForceSave = true
                         },

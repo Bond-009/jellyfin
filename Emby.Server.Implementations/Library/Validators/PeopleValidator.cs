@@ -6,7 +6,6 @@ using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
-using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 
 namespace Emby.Server.Implementations.Library.Validators
@@ -26,19 +25,19 @@ namespace Emby.Server.Implementations.Library.Validators
         /// </summary>
         private readonly ILogger _logger;
 
-        private readonly IFileSystem _fileSystem;
+        private readonly IDirectoryService _directoryService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PeopleValidator" /> class.
         /// </summary>
         /// <param name="libraryManager">The library manager.</param>
         /// <param name="logger">The logger.</param>
-        /// <param name="fileSystem">The file system.</param>
-        public PeopleValidator(ILibraryManager libraryManager, ILogger logger, IFileSystem fileSystem)
+        /// <param name="directoryService">The directory service.</param>
+        public PeopleValidator(ILibraryManager libraryManager, ILogger logger, IDirectoryService directoryService)
         {
             _libraryManager = libraryManager;
             _logger = logger;
-            _fileSystem = fileSystem;
+            _directoryService = directoryService;
         }
 
         /// <summary>
@@ -65,7 +64,7 @@ namespace Emby.Server.Implementations.Library.Validators
                 {
                     var item = _libraryManager.GetPerson(person);
 
-                    var options = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    var options = new MetadataRefreshOptions(_directoryService)
                     {
                         ImageRefreshMode = MetadataRefreshMode.ValidationOnly,
                         MetadataRefreshMode = MetadataRefreshMode.ValidationOnly

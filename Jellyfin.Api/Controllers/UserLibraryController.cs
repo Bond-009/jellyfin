@@ -36,7 +36,7 @@ public class UserLibraryController : BaseJellyfinApiController
     private readonly ILibraryManager _libraryManager;
     private readonly IDtoService _dtoService;
     private readonly IUserViewManager _userViewManager;
-    private readonly IFileSystem _fileSystem;
+    private readonly IDirectoryService _directoryService;
     private readonly ILyricManager _lyricManager;
 
     /// <summary>
@@ -47,7 +47,7 @@ public class UserLibraryController : BaseJellyfinApiController
     /// <param name="libraryManager">Instance of the <see cref="ILibraryManager"/> interface.</param>
     /// <param name="dtoService">Instance of the <see cref="IDtoService"/> interface.</param>
     /// <param name="userViewManager">Instance of the <see cref="IUserViewManager"/> interface.</param>
-    /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
+    /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
     /// <param name="lyricManager">Instance of the <see cref="ILyricManager"/> interface.</param>
     public UserLibraryController(
         IUserManager userManager,
@@ -55,7 +55,7 @@ public class UserLibraryController : BaseJellyfinApiController
         ILibraryManager libraryManager,
         IDtoService dtoService,
         IUserViewManager userViewManager,
-        IFileSystem fileSystem,
+        IDirectoryService directoryService,
         ILyricManager lyricManager)
     {
         _userManager = userManager;
@@ -63,7 +63,7 @@ public class UserLibraryController : BaseJellyfinApiController
         _libraryManager = libraryManager;
         _dtoService = dtoService;
         _userViewManager = userViewManager;
-        _fileSystem = fileSystem;
+        _directoryService = directoryService;
         _lyricManager = lyricManager;
     }
 
@@ -490,7 +490,7 @@ public class UserLibraryController : BaseJellyfinApiController
 
             if (!hasMetdata)
             {
-                var options = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                var options = new MetadataRefreshOptions(_directoryService)
                 {
                     MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                     ImageRefreshMode = MetadataRefreshMode.FullRefresh,

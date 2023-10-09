@@ -65,6 +65,7 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
         private readonly IMediaEncoder _mediaEncoder;
         private readonly IMediaSourceManager _mediaSourceManager;
         private readonly IStreamHelper _streamHelper;
+        private readonly IDirectoryService _directoryService;
 
         private readonly ConcurrentDictionary<string, ActiveRecordingInfo> _activeRecordings =
             new ConcurrentDictionary<string, ActiveRecordingInfo>(StringComparer.OrdinalIgnoreCase);
@@ -88,7 +89,8 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
             ILibraryManager libraryManager,
             ILibraryMonitor libraryMonitor,
             IProviderManager providerManager,
-            IMediaEncoder mediaEncoder)
+            IMediaEncoder mediaEncoder,
+            IDirectoryService directoryService)
         {
             Current = this;
 
@@ -104,6 +106,7 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
             _liveTvManager = (LiveTvManager)liveTvManager;
             _mediaSourceManager = mediaSourceManager;
             _streamHelper = streamHelper;
+            _directoryService = directoryService;
 
             _seriesTimerProvider = new SeriesTimerManager(_logger, Path.Combine(DataPath, "seriestimers.json"));
             _timerProvider = new TimerManager(_logger, Path.Combine(DataPath, "timers.json"));
@@ -1416,7 +1419,7 @@ namespace Emby.Server.Implementations.LiveTv.EmbyTV
 
                 _providerManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions(_directoryService)
                     {
                         RefreshPaths = new string[]
                         {

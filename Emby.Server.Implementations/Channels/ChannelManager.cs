@@ -50,6 +50,7 @@ namespace Emby.Server.Implementations.Channels
         private readonly IFileSystem _fileSystem;
         private readonly IProviderManager _providerManager;
         private readonly IMemoryCache _memoryCache;
+        private readonly IDirectoryService _directoryService;
         private readonly SemaphoreSlim _resourcePool = new SemaphoreSlim(1, 1);
         private readonly JsonSerializerOptions _jsonOptions = JsonDefaults.Options;
         private bool _disposed = false;
@@ -66,6 +67,7 @@ namespace Emby.Server.Implementations.Channels
         /// <param name="userDataManager">The user data manager.</param>
         /// <param name="providerManager">The provider manager.</param>
         /// <param name="memoryCache">The memory cache.</param>
+        /// <param name="directoryService">The directory service.</param>
         /// <param name="channels">The channels.</param>
         public ChannelManager(
             IUserManager userManager,
@@ -77,6 +79,7 @@ namespace Emby.Server.Implementations.Channels
             IUserDataManager userDataManager,
             IProviderManager providerManager,
             IMemoryCache memoryCache,
+            IDirectoryService directoryService,
             IEnumerable<IChannel> channels)
         {
             _userManager = userManager;
@@ -88,6 +91,7 @@ namespace Emby.Server.Implementations.Channels
             _userDataManager = userDataManager;
             _providerManager = providerManager;
             _memoryCache = memoryCache;
+            _directoryService = directoryService;
             Channels = channels.ToArray();
         }
 
@@ -497,7 +501,7 @@ namespace Emby.Server.Implementations.Channels
             }
 
             await item.RefreshMetadata(
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions(_directoryService)
                 {
                     ForceSave = !isNew && forceUpdate
                 },
@@ -1178,7 +1182,7 @@ namespace Emby.Server.Implementations.Channels
 
             if (isNew || forceUpdate || item.DateLastRefreshed == default)
             {
-                _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.Normal);
+                _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(_directoryService), RefreshPriority.Normal);
             }
 
             return item;

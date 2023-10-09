@@ -47,6 +47,7 @@ public class SubtitleController : BaseJellyfinApiController
     private readonly IProviderManager _providerManager;
     private readonly IFileSystem _fileSystem;
     private readonly ILogger<SubtitleController> _logger;
+    private readonly IDirectoryService _directoryService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SubtitleController"/> class.
@@ -59,6 +60,7 @@ public class SubtitleController : BaseJellyfinApiController
     /// <param name="providerManager">Instance of <see cref="IProviderManager"/> interface.</param>
     /// <param name="fileSystem">Instance of <see cref="IFileSystem"/> interface.</param>
     /// <param name="logger">Instance of <see cref="ILogger{SubtitleController}"/> interface.</param>
+    /// <param name="directoryService">Instance of <see cref="IDirectoryService"/> interface.</param>
     public SubtitleController(
         IServerConfigurationManager serverConfigurationManager,
         ILibraryManager libraryManager,
@@ -67,7 +69,8 @@ public class SubtitleController : BaseJellyfinApiController
         IMediaSourceManager mediaSourceManager,
         IProviderManager providerManager,
         IFileSystem fileSystem,
-        ILogger<SubtitleController> logger)
+        ILogger<SubtitleController> logger,
+        IDirectoryService directoryService)
     {
         _serverConfigurationManager = serverConfigurationManager;
         _libraryManager = libraryManager;
@@ -77,6 +80,7 @@ public class SubtitleController : BaseJellyfinApiController
         _providerManager = providerManager;
         _fileSystem = fileSystem;
         _logger = logger;
+        _directoryService = directoryService;
     }
 
     /// <summary>
@@ -148,7 +152,7 @@ public class SubtitleController : BaseJellyfinApiController
             await _subtitleManager.DownloadSubtitles(video, subtitleId, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            _providerManager.QueueRefresh(video.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+            _providerManager.QueueRefresh(video.Id, new MetadataRefreshOptions(_directoryService), RefreshPriority.High);
         }
         catch (Exception ex)
         {
@@ -419,7 +423,7 @@ public class SubtitleController : BaseJellyfinApiController
                     IsHearingImpaired = body.IsHearingImpaired,
                     Stream = stream
                 }).ConfigureAwait(false);
-            _providerManager.QueueRefresh(video.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+            _providerManager.QueueRefresh(video.Id, new MetadataRefreshOptions(_directoryService), RefreshPriority.High);
 
             return NoContent();
         }
