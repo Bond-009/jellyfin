@@ -448,13 +448,27 @@ namespace Emby.Server.Implementations.Library
 
             item.SetParent(null);
 
-            _itemRepository.DeleteItem(item.Id);
-            foreach (var child in children)
+            BaseItem[] itemsToRemove = [item, ..children];
+            foreach (var i in itemsToRemove)
             {
-                _itemRepository.DeleteItem(child.Id);
-            }
+                _itemRepository.DeleteItem(i.Id);
+                _cache.TryRemove(i.Id, out _);
 
-            _cache.TryRemove(item.Id, out _);
+                foreach (var id in i.ExtraIds)
+                {
+                    _itemRepository.DeleteItem(id);
+                    _cache.TryRemove(id, out _);
+                }
+
+                if (i is Video video)
+                {
+                    foreach (var id in video.GetLocalAlternateVersionIds())
+                    {
+                        _itemRepository.DeleteItem(id);
+                        _cache.TryRemove(id, out _);
+                    }
+                }
+            }
 
             ReportItemRemoved(item, parent);
         }
@@ -2004,22 +2018,19 @@ namespace Emby.Server.Implementations.Library
         /// <param name="parent">The parent item.</param>
         public void ReportItemRemoved(BaseItem item, BaseItem parent)
         {
-            if (ItemRemoved is not null)
+            try
             {
-                try
-                {
-                    ItemRemoved(
-                        this,
-                        new ItemChangeEventArgs
-                        {
-                            Item = item,
-                            Parent = parent
-                        });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in ItemRemoved event handler");
-                }
+                ItemRemoved?.Invoke(
+                    this,
+                    new ItemChangeEventArgs
+                    {
+                        Item = item,
+                        Parent = parent
+                    });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ItemRemoved event handler");
             }
         }
 
