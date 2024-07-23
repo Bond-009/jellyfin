@@ -1665,6 +1665,7 @@ public class DynamicHlsController : BaseJellyfinApiController
         var strictArgs = string.Empty;
         var actualOutputAudioCodec = state.ActualOutputAudioCodec;
         if (string.Equals(actualOutputAudioCodec, "opus", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(actualOutputAudioCodec, "dca", StringComparison.OrdinalIgnoreCase)
             || string.Equals(actualOutputAudioCodec, "dts", StringComparison.OrdinalIgnoreCase)
             || string.Equals(actualOutputAudioCodec, "truehd", StringComparison.OrdinalIgnoreCase)
             || (string.Equals(actualOutputAudioCodec, "flac", StringComparison.OrdinalIgnoreCase)
