@@ -491,7 +491,7 @@ namespace Jellyfin.LiveTv.Channels
             }
 
             await item.RefreshMetadata(
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions()
                 {
                     ForceSave = !isNew && forceUpdate
                 },
@@ -1166,7 +1166,7 @@ namespace Jellyfin.LiveTv.Channels
 
             if (isNew || forceUpdate || item.DateLastRefreshed == default)
             {
-                _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.Normal);
+                _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(), RefreshPriority.Normal);
             }
 
             return item;

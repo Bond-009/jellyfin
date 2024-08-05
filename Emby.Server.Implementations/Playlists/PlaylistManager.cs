@@ -147,7 +147,7 @@ namespace Emby.Server.Implementations.Playlists
                 playlist.SetMediaType(request.MediaType);
                 parentFolder.AddChild(playlist);
 
-                await playlist.RefreshMetadata(new MetadataRefreshOptions(new DirectoryService(_fileSystem)) { ForceSave = true }, CancellationToken.None)
+                await playlist.RefreshMetadata(new MetadataRefreshOptions() { ForceSave = true }, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 if (request.ItemIdList.Count > 0)
@@ -248,7 +248,7 @@ namespace Emby.Server.Implementations.Playlists
             // Refresh playlist metadata
             _providerManager.QueueRefresh(
                 playlist.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions()
                 {
                     ForceSave = true
                 },
@@ -276,7 +276,7 @@ namespace Emby.Server.Implementations.Playlists
 
             _providerManager.QueueRefresh(
                 playlist.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions()
                 {
                     ForceSave = true
                 },

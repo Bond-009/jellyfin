@@ -564,7 +564,6 @@ namespace Emby.Server.Implementations
             serviceCollection.AddScoped<AudioHelper>();
             serviceCollection.AddScoped<DynamicHlsHelper>();
             serviceCollection.AddScoped<IClientEventLogger, ClientEventLogger>();
-            serviceCollection.AddSingleton<IDirectoryService, DirectoryService>();
 
             serviceCollection.AddSingleton<IMediaSegmentManager, MediaSegmentManager>();
         }

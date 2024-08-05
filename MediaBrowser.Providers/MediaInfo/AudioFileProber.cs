@@ -416,7 +416,7 @@ namespace MediaBrowser.Providers.MediaInfo
             MetadataRefreshOptions options)
         {
             var startIndex = currentStreams.Count == 0 ? 0 : (currentStreams.Select(i => i.Index).Max() + 1);
-            var externalLyricFiles = _lyricResolver.GetExternalStreams(audio, startIndex, options.DirectoryService, false);
+            var externalLyricFiles = _lyricResolver.GetExternalStreams(audio, startIndex);
 
             audio.LyricFiles = externalLyricFiles.Select(i => i.Path).Distinct().ToArray();
             if (externalLyricFiles.Count > 0)

@@ -8,9 +8,8 @@ using Emby.Naming.Common;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities.Audio;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
-using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 
 namespace Emby.Server.Implementations.Library.Resolvers.Audio
@@ -22,22 +21,22 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
     {
         private readonly ILogger<MusicAlbumResolver> _logger;
         private readonly NamingOptions _namingOptions;
-        private readonly IDirectoryService _directoryService;
+        private readonly IFileSystem _fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MusicArtistResolver"/> class.
         /// </summary>
         /// <param name="logger">Instance of the <see cref="MusicAlbumResolver"/> interface.</param>
         /// <param name="namingOptions">The <see cref="NamingOptions"/>.</param>
-        /// <param name="directoryService">The directory service.</param>
+        /// <param name="fileSystem">The <see cref="IFileSystem"/>.</param>
         public MusicArtistResolver(
             ILogger<MusicAlbumResolver> logger,
             NamingOptions namingOptions,
-            IDirectoryService directoryService)
+            IFileSystem fileSystem)
         {
             _logger = logger;
             _namingOptions = namingOptions;
-            _directoryService = directoryService;
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -85,7 +84,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
                 return null;
             }
 
-            var albumResolver = new MusicAlbumResolver(_logger, _namingOptions, _directoryService);
+            var albumResolver = new MusicAlbumResolver(_logger, _namingOptions, _fileSystem);
             var albumParser = new AlbumParser(_namingOptions);
 
             var directories = args.FileSystemChildren.Where(i => i.IsDirectory);
@@ -109,7 +108,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
                 }
 
                 // If we contain a music album assume we are an artist folder
-                if (albumResolver.IsMusicAlbum(fileSystemInfo.FullName, _directoryService))
+                if (albumResolver.IsMusicAlbum(fileSystemInfo.FullName))
                 {
                     // Stop once we see a music album
                     state.Stop();

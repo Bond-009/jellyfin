@@ -17,6 +17,7 @@ using MediaBrowser.Controller.Extensions;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.IO;
 using MediaBrowser.XbmcMetadata.Configuration;
 using MediaBrowser.XbmcMetadata.Savers;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ namespace MediaBrowser.XbmcMetadata.Parsers
         private readonly IConfigurationManager _config;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
-        private readonly IDirectoryService _directoryService;
+        private readonly IFileSystem _fileSystem;
         private Dictionary<string, string> _validProviderIds;
 
         /// <summary>
@@ -44,14 +45,14 @@ namespace MediaBrowser.XbmcMetadata.Parsers
         /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
         /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
         /// <param name="userDataManager">Instance of the <see cref="IUserDataManager"/> interface.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
+        /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         public BaseNfoParser(
             ILogger logger,
             IConfigurationManager config,
             IProviderManager providerManager,
             IUserManager userManager,
             IUserDataManager userDataManager,
-            IDirectoryService directoryService)
+            IFileSystem fileSystem)
         {
             Logger = logger;
             _config = config;
@@ -59,7 +60,7 @@ namespace MediaBrowser.XbmcMetadata.Parsers
             _validProviderIds = new Dictionary<string, string>();
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _directoryService = directoryService;
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -671,8 +672,13 @@ namespace MediaBrowser.XbmcMetadata.Parsers
                     return;
                 }
 
+<<<<<<< Updated upstream
                 var fileSystemMetadata = _directoryService.GetFile(val);
                 // nonexistent file returns null
+=======
+                var fileSystemMetadata = _fileSystem.GetFileInfo(val);
+                // non existing file returns null
+>>>>>>> Stashed changes
                 if (fileSystemMetadata is null || !fileSystemMetadata.Exists)
                 {
                     Logger.LogWarning("Artwork file {Path} specified in nfo file for {ItemName} does not exist.", uri, itemResult.Item.Name);

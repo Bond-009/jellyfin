@@ -3,7 +3,6 @@ using Emby.Server.Implementations.Library.Resolvers.Movies;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -18,7 +17,7 @@ public class MovieResolverTests
     [Fact]
     public void Resolve_GivenLocalAlternateVersion_ResolvesToVideo()
     {
-        var movieResolver = new MovieResolver(Mock.Of<IImageProcessor>(), Mock.Of<ILogger<MovieResolver>>(), _namingOptions, Mock.Of<IDirectoryService>());
+        var movieResolver = new MovieResolver(Mock.Of<IImageProcessor>(), Mock.Of<ILogger<MovieResolver>>(), _namingOptions, Mock.Of<IFileSystem>());
         var itemResolveArgs = new ItemResolveArgs(
             Mock.Of<IServerApplicationPaths>(),
             null)

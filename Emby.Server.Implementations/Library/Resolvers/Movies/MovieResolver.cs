@@ -14,7 +14,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
@@ -28,6 +27,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
     public partial class MovieResolver : BaseVideoResolver<Video>, IMultiItemResolver
     {
         private readonly IImageProcessor _imageProcessor;
+        private readonly IFileSystem _fileSystem;
 
         private static readonly CollectionType[] _validCollectionTypes = new[]
         {
@@ -44,11 +44,12 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
         /// <param name="imageProcessor">The image processor.</param>
         /// <param name="logger">The logger.</param>
         /// <param name="namingOptions">The naming options.</param>
-        /// <param name="directoryService">The directory service.</param>
-        public MovieResolver(IImageProcessor imageProcessor, ILogger<MovieResolver> logger, NamingOptions namingOptions, IDirectoryService directoryService)
-            : base(logger, namingOptions, directoryService)
+        /// <param name="fileSystem">The file system.</param>
+        public MovieResolver(IImageProcessor imageProcessor, ILogger<MovieResolver> logger, NamingOptions namingOptions, IFileSystem fileSystem)
+            : base(logger, namingOptions)
         {
             _imageProcessor = imageProcessor;
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -64,8 +65,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
         public MultiItemResolverResult ResolveMultiple(
             Folder parent,
             List<FileSystemMetadata> files,
-            CollectionType? collectionType,
-            IDirectoryService directoryService)
+            CollectionType? collectionType)
         {
             var result = ResolveMultipleInternal(parent, files, collectionType);
 
@@ -102,12 +102,12 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
 
                 if (collectionType == CollectionType.musicvideos)
                 {
-                    movie = FindMovie<MusicVideo>(args, args.Path, args.Parent, files, DirectoryService, collectionType, false);
+                    movie = FindMovie<MusicVideo>(args, args.Path, args.Parent, files, collectionType, false);
                 }
 
                 if (collectionType == CollectionType.homevideos)
                 {
-                    movie = FindMovie<Video>(args, args.Path, args.Parent, files, DirectoryService, collectionType, false);
+                    movie = FindMovie<Video>(args, args.Path, args.Parent, files, collectionType, false);
                 }
 
                 if (collectionType is null)
@@ -123,12 +123,12 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
                         return null;
                     }
 
-                    movie = FindMovie<Movie>(args, args.Path, args.Parent, files, DirectoryService, collectionType, true);
+                    movie = FindMovie<Movie>(args, args.Path, args.Parent, files, collectionType, true);
                 }
 
                 if (collectionType == CollectionType.movies)
                 {
-                    movie = FindMovie<Movie>(args, args.Path, args.Parent, files, DirectoryService, collectionType, true);
+                    movie = FindMovie<Movie>(args, args.Path, args.Parent, files, collectionType, true);
                 }
 
                 // ignore extras
@@ -389,7 +389,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
         /// Finds a movie based on a child file system entries.
         /// </summary>
         /// <returns>Movie.</returns>
-        private T FindMovie<T>(ItemResolveArgs args, string path, Folder parent, List<FileSystemMetadata> fileSystemEntries, IDirectoryService directoryService, CollectionType? collectionType, bool parseName)
+        private T FindMovie<T>(ItemResolveArgs args, string path, Folder parent, List<FileSystemMetadata> fileSystemEntries, CollectionType? collectionType, bool parseName)
             where T : Video, new()
         {
             var multiDiscFolders = new List<FileSystemMetadata>();
@@ -405,7 +405,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
 
                 if (child.IsDirectory)
                 {
-                    if (IsDvdDirectory(child.FullName, filename, directoryService))
+                    if (IsDvdDirectory(child.FullName, filename))
                     {
                         var movie = new T
                         {
@@ -467,7 +467,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
             }
             else if (result.Items.Count == 0 && multiDiscFolders.Count > 0)
             {
-                return GetMultiDiscMovie<T>(multiDiscFolders, directoryService);
+                return GetMultiDiscMovie<T>(multiDiscFolders);
             }
 
             return null;
@@ -477,22 +477,21 @@ namespace Emby.Server.Implementations.Library.Resolvers.Movies
         /// Gets the multi disc movie.
         /// </summary>
         /// <param name="multiDiscFolders">The folders.</param>
-        /// <param name="directoryService">The directory service.</param>
         /// <returns>``0.</returns>
-        private T GetMultiDiscMovie<T>(List<FileSystemMetadata> multiDiscFolders, IDirectoryService directoryService)
+        private T GetMultiDiscMovie<T>(List<FileSystemMetadata> multiDiscFolders)
                where T : Video, new()
         {
             var videoTypes = new List<VideoType>();
 
             var folderPaths = multiDiscFolders.Select(i => i.FullName).Where(i =>
             {
-                var subFileEntries = directoryService.GetFileSystemEntries(i);
+                var subFileEntries = _fileSystem.GetFileSystemEntries(i);
 
                 var subfolders = subFileEntries
                     .Where(e => e.IsDirectory)
                     .ToList();
 
-                if (subfolders.Any(s => IsDvdDirectory(s.FullName, s.Name, directoryService)))
+                if (subfolders.Any(s => IsDvdDirectory(s.FullName, s.Name)))
                 {
                     videoTypes.Add(VideoType.Dvd);
                     return true;

@@ -303,7 +303,7 @@ public class GuideManager : IGuideManager
 
                 await currentChannel.UpdateToRepositoryAsync(ItemUpdateType.MetadataImport, cancellationToken).ConfigureAwait(false);
                 await currentChannel.RefreshMetadata(
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions()
                     {
                         ForceSave = true
                     },

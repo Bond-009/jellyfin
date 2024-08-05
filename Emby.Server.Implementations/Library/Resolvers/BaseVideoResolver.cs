@@ -10,7 +10,6 @@ using Emby.Naming.Common;
 using Emby.Naming.Video;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -25,16 +24,13 @@ namespace Emby.Server.Implementations.Library.Resolvers
     {
         private readonly ILogger _logger;
 
-        protected BaseVideoResolver(ILogger logger, NamingOptions namingOptions, IDirectoryService directoryService)
+        protected BaseVideoResolver(ILogger logger, NamingOptions namingOptions)
         {
             _logger = logger;
             NamingOptions = namingOptions;
-            DirectoryService = directoryService;
         }
 
         protected NamingOptions NamingOptions { get; }
-
-        protected IDirectoryService DirectoryService { get; }
 
         /// <summary>
         /// Resolves the specified args.
@@ -68,7 +64,7 @@ namespace Emby.Server.Implementations.Library.Resolvers
                     var filename = child.Name;
                     if (child.IsDirectory)
                     {
-                        if (IsDvdDirectory(child.FullName, filename, DirectoryService))
+                        if (IsDvdDirectory(child.FullName, filename))
                         {
                             var videoTmp = new TVideoType
                             {
@@ -254,16 +250,22 @@ namespace Emby.Server.Implementations.Library.Resolvers
         /// </summary>
         /// <param name="fullPath">The full path of the directory.</param>
         /// <param name="directoryName">The name of the directory.</param>
-        /// <param name="directoryService">The directory service.</param>
         /// <returns><c>true</c> if the provided directory is a DVD directory, <c>false</c> otherwise.</returns>
-        protected bool IsDvdDirectory(string fullPath, string directoryName, IDirectoryService directoryService)
+        protected bool IsDvdDirectory(string fullPath, string directoryName)
         {
             if (!string.Equals(directoryName, "video_ts", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return directoryService.GetFilePaths(fullPath).Any(i => Path.GetExtension(i.AsSpan()).Equals(".vob", StringComparison.OrdinalIgnoreCase));
+            return Directory.EnumerateFiles(
+                fullPath,
+                "*.vob",
+                new EnumerationOptions
+                {
+                    MatchCasing = MatchCasing.CaseInsensitive,
+                    AttributesToSkip = 0
+                }).Any();
         }
 
         /// <summary>

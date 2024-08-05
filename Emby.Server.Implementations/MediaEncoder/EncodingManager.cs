@@ -14,7 +14,6 @@ using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Configuration;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Entities;
@@ -107,7 +106,7 @@ namespace Emby.Server.Implementations.MediaEncoder
             return sum / chapters.Count;
         }
 
-        public async Task<bool> RefreshChapterImages(Video video, IDirectoryService directoryService, IReadOnlyList<ChapterInfo> chapters, bool extractImages, bool saveChapters, CancellationToken cancellationToken)
+        public async Task<bool> RefreshChapterImages(Video video, IReadOnlyList<ChapterInfo> chapters, bool extractImages, bool saveChapters, CancellationToken cancellationToken)
         {
             if (chapters.Count == 0)
             {
@@ -134,7 +133,7 @@ namespace Emby.Server.Implementations.MediaEncoder
 
             var runtimeTicks = video.RunTimeTicks ?? 0;
 
-            var currentImages = GetSavedChapterImages(video, directoryService);
+            var currentImages = GetSavedChapterImages(video);
 
             foreach (var chapter in chapters)
             {
@@ -229,7 +228,7 @@ namespace Emby.Server.Implementations.MediaEncoder
             return Path.Combine(GetChapterImagesPath(video), filename);
         }
 
-        private static IReadOnlyList<string> GetSavedChapterImages(Video video, IDirectoryService directoryService)
+        private static IReadOnlyList<string> GetSavedChapterImages(Video video)
         {
             var path = GetChapterImagesPath(video);
             if (!Directory.Exists(path))
@@ -239,7 +238,13 @@ namespace Emby.Server.Implementations.MediaEncoder
 
             try
             {
-                return directoryService.GetFilePaths(path);
+                return Directory.EnumerateFiles(
+                    path,
+                    "*",
+                    new EnumerationOptions()
+                    {
+                        AttributesToSkip = 0
+                    }).ToList();
             }
             catch (IOException)
             {

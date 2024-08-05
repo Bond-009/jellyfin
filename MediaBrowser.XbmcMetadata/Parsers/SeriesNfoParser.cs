@@ -8,6 +8,7 @@ using MediaBrowser.Controller.Extensions;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 
 namespace MediaBrowser.XbmcMetadata.Parsers
@@ -25,15 +26,15 @@ namespace MediaBrowser.XbmcMetadata.Parsers
         /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
         /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
         /// <param name="userDataManager">Instance of the <see cref="IUserDataManager"/> interface.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
+        /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         public SeriesNfoParser(
             ILogger logger,
             IConfigurationManager config,
             IProviderManager providerManager,
             IUserManager userManager,
             IUserDataManager userDataManager,
-            IDirectoryService directoryService)
-            : base(logger, config, providerManager, userManager, userDataManager, directoryService)
+            IFileSystem fileSystem)
+            : base(logger, config, providerManager, userManager, userDataManager, fileSystem)
         {
         }
 

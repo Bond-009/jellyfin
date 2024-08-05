@@ -33,8 +33,7 @@ namespace MediaBrowser.Controller.Resolvers
         MultiItemResolverResult ResolveMultiple(
             Folder parent,
             List<FileSystemMetadata> files,
-            CollectionType? collectionType,
-            IDirectoryService directoryService);
+            CollectionType? collectionType);
     }
 
     public class MultiItemResolverResult

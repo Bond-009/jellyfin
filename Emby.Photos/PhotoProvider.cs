@@ -10,6 +10,7 @@ using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Drawing;
 using MediaBrowser.Model.Entities;
+using MediaBrowser.Model.IO;
 using Microsoft.Extensions.Logging;
 using TagLib;
 using TagLib.IFD;
@@ -25,6 +26,7 @@ public class PhotoProvider : ICustomMetadataProvider<Photo>, IForcedProvider, IH
 {
     private readonly ILogger<PhotoProvider> _logger;
     private readonly IImageProcessor _imageProcessor;
+    private readonly IFileSystem _fileSystem;
 
     // Other extensions might cause taglib to hang
     private readonly string[] _includeExtensions = [".jpg", ".jpeg", ".png", ".tiff", ".cr2", ".webp", ".avif"];
@@ -34,21 +36,23 @@ public class PhotoProvider : ICustomMetadataProvider<Photo>, IForcedProvider, IH
     /// </summary>
     /// <param name="logger">The logger.</param>
     /// <param name="imageProcessor">The image processor.</param>
-    public PhotoProvider(ILogger<PhotoProvider> logger, IImageProcessor imageProcessor)
+    /// <param name="fileSystem">The file system.</param>
+    public PhotoProvider(ILogger<PhotoProvider> logger, IImageProcessor imageProcessor, IFileSystem fileSystem)
     {
         _logger = logger;
         _imageProcessor = imageProcessor;
+        _fileSystem = fileSystem;
     }
 
     /// <inheritdoc />
     public string Name => "Embedded Information";
 
     /// <inheritdoc />
-    public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+    public bool HasChanged(BaseItem item)
     {
         if (item.IsFileProtocol)
         {
-            var file = directoryService.GetFile(item.Path);
+            var file = _fileSystem.GetFileInfo(item.Path);
             return file is not null && file.LastWriteTimeUtc != item.DateModified;
         }
 

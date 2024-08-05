@@ -266,7 +266,7 @@ public class ItemLookupController : BaseJellyfinApiController
         item.ProviderIds = searchResult.ProviderIds;
         await _providerManager.RefreshFullItem(
             item,
-            new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+            new MetadataRefreshOptions()
             {
                 MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                 ImageRefreshMode = MetadataRefreshMode.FullRefresh,

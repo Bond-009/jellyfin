@@ -20,7 +20,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
         private readonly IProviderManager _providerManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
-        private readonly IDirectoryService _directoryService;
         private readonly ILibraryManager _libraryManager;
 
         /// <summary>
@@ -32,7 +31,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
         /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
         /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
         /// <param name="userDataManager">Instance of the <see cref="IUserDataManager"/> interface.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         /// <param name="libraryManager">Instance of the <see cref="ILibraryManager"/> interface.</param>
         public SeriesNfoSeasonProvider(
             ILogger<SeriesNfoSeasonProvider> logger,
@@ -41,7 +39,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
             IProviderManager providerManager,
             IUserManager userManager,
             IUserDataManager userDataManager,
-            IDirectoryService directoryService,
             ILibraryManager libraryManager)
             : base(fileSystem)
         {
@@ -50,18 +47,17 @@ namespace MediaBrowser.XbmcMetadata.Providers
             _providerManager = providerManager;
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _directoryService = directoryService;
             _libraryManager = libraryManager;
         }
 
         /// <inheritdoc />
         protected override void Fetch(MetadataResult<Season> result, string path, CancellationToken cancellationToken)
         {
-            new SeriesNfoSeasonParser(_logger, _config, _providerManager, _userManager, _userDataManager, _directoryService).Fetch(result, path, cancellationToken);
+            new SeriesNfoSeasonParser(_logger, _config, _providerManager, _userManager, _userDataManager, FileSystem).Fetch(result, path, cancellationToken);
         }
 
         /// <inheritdoc />
-        protected override FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService)
+        protected override FileSystemMetadata? GetXmlFile(ItemInfo info)
         {
             var seasonPath = info.Path;
             if (seasonPath is not null)
@@ -69,7 +65,7 @@ namespace MediaBrowser.XbmcMetadata.Providers
                 var path = Path.Combine(seasonPath, "tvshow.nfo");
                 if (Path.Exists(path))
                 {
-                    return directoryService.GetFile(path);
+                    return FileSystem.GetFileInfo(path);
                 }
             }
 
@@ -79,7 +75,7 @@ namespace MediaBrowser.XbmcMetadata.Providers
                 var path = Path.Combine(seriesPath, "tvshow.nfo");
                 if (Path.Exists(path))
                 {
-                    return directoryService.GetFile(path);
+                    return FileSystem.GetFileInfo(path);
                 }
             }
 

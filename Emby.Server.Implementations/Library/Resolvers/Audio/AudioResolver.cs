@@ -40,8 +40,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
         public MultiItemResolverResult ResolveMultiple(
             Folder parent,
             List<FileSystemMetadata> files,
-            CollectionType? collectionType,
-            IDirectoryService directoryService)
+            CollectionType? collectionType)
         {
             var result = ResolveMultipleInternal(parent, files, collectionType);
 

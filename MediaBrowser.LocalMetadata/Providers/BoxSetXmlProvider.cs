@@ -36,9 +36,9 @@ namespace MediaBrowser.LocalMetadata.Providers
         }
 
         /// <inheritdoc />
-        protected override FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService)
+        protected override FileSystemMetadata? GetXmlFile(ItemInfo info)
         {
-            return directoryService.GetFile(Path.Combine(info.Path, "collection.xml"));
+            return FileSystem.GetFileInfo(Path.Combine(info.Path, "collection.xml"));
         }
     }
 }

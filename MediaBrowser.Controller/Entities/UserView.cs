@@ -182,7 +182,7 @@ namespace MediaBrowser.Controller.Entities
             return _originalFolderViewTypes.Contains(viewType);
         }
 
-        protected override Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, IDirectoryService directoryService, CancellationToken cancellationToken)
+        protected override Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

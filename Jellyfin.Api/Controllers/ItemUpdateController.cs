@@ -123,7 +123,7 @@ public class ItemUpdateController : BaseJellyfinApiController
         {
             _providerManager.QueueRefresh(
                 series!.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions()
                 {
                     MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                     ImageRefreshMode = MetadataRefreshMode.FullRefresh,

@@ -245,7 +245,7 @@ namespace Emby.Server.Implementations.Images
             throw new ArgumentException("Unexpected image type", nameof(imageType));
         }
 
-        public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+        public bool HasChanged(BaseItem item)
         {
             if (!Supports(item))
             {

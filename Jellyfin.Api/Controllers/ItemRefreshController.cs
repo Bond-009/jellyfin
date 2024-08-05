@@ -72,7 +72,7 @@ public class ItemRefreshController : BaseJellyfinApiController
             return NotFound();
         }
 
-        var refreshOptions = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+        var refreshOptions = new MetadataRefreshOptions()
         {
             MetadataRefreshMode = metadataRefreshMode,
             ImageRefreshMode = imageRefreshMode,

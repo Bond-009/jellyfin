@@ -53,7 +53,6 @@ public class PlaylistItemsProvider : ILocalMetadataProvider<Playlist>,
     /// <inheritdoc />
     public Task<MetadataResult<Playlist>> GetMetadata(
         ItemInfo info,
-        IDirectoryService directoryService,
         CancellationToken cancellationToken)
     {
         var result = new MetadataResult<Playlist>()
@@ -209,12 +208,12 @@ public class PlaylistItemsProvider : ILocalMetadataProvider<Playlist>,
     }
 
     /// <inheritdoc />
-    public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+    public bool HasChanged(BaseItem item)
     {
         var path = item.Path;
         if (!string.IsNullOrWhiteSpace(path) && item.IsFileProtocol)
         {
-            var file = directoryService.GetFile(path);
+            var file = _fileSystem.GetFileInfo(path);
             if (file is not null && file.LastWriteTimeUtc != item.DateModified)
             {
                 _logger.LogDebug("Refreshing {Path} due to date modified timestamp change.", path);

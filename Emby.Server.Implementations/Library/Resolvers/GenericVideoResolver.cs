@@ -2,7 +2,6 @@
 
 using Emby.Naming.Common;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Providers;
 using Microsoft.Extensions.Logging;
 
 namespace Emby.Server.Implementations.Library.Resolvers
@@ -19,9 +18,8 @@ namespace Emby.Server.Implementations.Library.Resolvers
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="namingOptions">The naming options.</param>
-        /// <param name="directoryService">The directory service.</param>
-        public GenericVideoResolver(ILogger logger, NamingOptions namingOptions, IDirectoryService directoryService)
-            : base(logger, namingOptions, directoryService)
+        public GenericVideoResolver(ILogger logger, NamingOptions namingOptions)
+            : base(logger, namingOptions)
         {
         }
     }

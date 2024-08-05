@@ -137,7 +137,7 @@ public class LyricsController : BaseJellyfinApiController
                 return BadRequest();
             }
 
-            _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+            _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(), RefreshPriority.High);
             return Ok(uploadedLyric);
         }
     }
@@ -217,7 +217,7 @@ public class LyricsController : BaseJellyfinApiController
             return NotFound();
         }
 
-        _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+        _providerManager.QueueRefresh(item.Id, new MetadataRefreshOptions(), RefreshPriority.High);
         return Ok(downloadedLyrics);
     }
 

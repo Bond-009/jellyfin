@@ -65,7 +65,7 @@ namespace MediaBrowser.LocalMetadata.Images
         }
 
         /// <inheritdoc />
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item)
         {
             var path = item.GetInternalMetadataPath();
 
@@ -76,7 +76,7 @@ namespace MediaBrowser.LocalMetadata.Images
 
             try
             {
-                return new LocalImageProvider(_fileSystem).GetImages(item, path, directoryService);
+                return new LocalImageProvider(_fileSystem).GetImages(item, path);
             }
             catch (IOException ex)
             {

@@ -20,7 +20,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
         private readonly IProviderManager _providerManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
-        private readonly IDirectoryService _directoryService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlbumNfoProvider"/> class.
@@ -31,15 +30,13 @@ namespace MediaBrowser.XbmcMetadata.Providers
         /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
         /// <param name="userManager">Instance of the <see cref="IUserManager"/> interface.</param>
         /// <param name="userDataManager">Instance of the <see cref="IUserDataManager"/> interface.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         public AlbumNfoProvider(
             ILogger<AlbumNfoProvider> logger,
             IFileSystem fileSystem,
             IConfigurationManager config,
             IProviderManager providerManager,
             IUserManager userManager,
-            IUserDataManager userDataManager,
-            IDirectoryService directoryService)
+            IUserDataManager userDataManager)
             : base(fileSystem)
         {
             _logger = logger;
@@ -47,17 +44,16 @@ namespace MediaBrowser.XbmcMetadata.Providers
             _providerManager = providerManager;
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _directoryService = directoryService;
         }
 
         /// <inheritdoc />
         protected override void Fetch(MetadataResult<MusicAlbum> result, string path, CancellationToken cancellationToken)
         {
-            new BaseNfoParser<MusicAlbum>(_logger, _config, _providerManager, _userManager, _userDataManager, _directoryService).Fetch(result, path, cancellationToken);
+            new BaseNfoParser<MusicAlbum>(_logger, _config, _providerManager, _userManager, _userDataManager, FileSystem).Fetch(result, path, cancellationToken);
         }
 
         /// <inheritdoc />
-        protected override FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService)
-            => directoryService.GetFile(Path.Combine(info.Path, "album.nfo"));
+        protected override FileSystemMetadata? GetXmlFile(ItemInfo info)
+            => FileSystem.GetFileInfo(Path.Combine(info.Path, "album.nfo"));
     }
 }

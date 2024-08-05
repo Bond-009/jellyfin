@@ -51,11 +51,11 @@ public class TrickplayProvider : ICustomMetadataProvider<Episode>,
     public int Order => 100;
 
     /// <inheritdoc />
-    public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+    public bool HasChanged(BaseItem item)
     {
         if (item.IsFileProtocol)
         {
-            var file = directoryService.GetFile(item.Path);
+            var file = BaseItem.FileSystem.GetFileInfo(item.Path);
             if (file is not null && item.DateModified != file.LastWriteTimeUtc)
             {
                 return true;

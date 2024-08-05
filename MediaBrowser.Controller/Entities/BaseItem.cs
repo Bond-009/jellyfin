@@ -1256,7 +1256,7 @@ namespace MediaBrowser.Controller.Entities
 
         public Task RefreshMetadata(CancellationToken cancellationToken)
         {
-            return RefreshMetadata(new MetadataRefreshOptions(new DirectoryService(FileSystem)), cancellationToken);
+            return RefreshMetadata(new MetadataRefreshOptions(), cancellationToken);
         }
 
         /// <summary>
@@ -1275,7 +1275,7 @@ namespace MediaBrowser.Controller.Entities
                 {
                     if (IsFileProtocol)
                     {
-                        requiresSave = await RefreshedOwnedItems(options, GetFileSystemChildren(options.DirectoryService), cancellationToken).ConfigureAwait(false);
+                        requiresSave = await RefreshedOwnedItems(options, GetFileSystemChildren(), cancellationToken).ConfigureAwait(false);
                     }
 
                     await LibraryManager.UpdateImagesAsync(this).ConfigureAwait(false); // ensure all image properties in DB are fresh
@@ -1355,16 +1355,16 @@ namespace MediaBrowser.Controller.Entities
             return await RefreshExtras(this, options, fileSystemChildren, cancellationToken).ConfigureAwait(false);
         }
 
-        protected virtual FileSystemMetadata[] GetFileSystemChildren(IDirectoryService directoryService)
+        protected virtual FileSystemMetadata[] GetFileSystemChildren()
         {
             var path = ContainingFolderPath;
 
-            return directoryService.GetFileSystemEntries(path);
+            return FileSystem.GetFileSystemEntries(path).ToArray();
         }
 
         private async Task<bool> RefreshExtras(BaseItem item, MetadataRefreshOptions options, IReadOnlyList<FileSystemMetadata> fileSystemChildren, CancellationToken cancellationToken)
         {
-            var extras = LibraryManager.FindExtras(item, fileSystemChildren, options.DirectoryService).ToArray();
+            var extras = LibraryManager.FindExtras(item, fileSystemChildren).ToArray();
             var newExtraIds = Array.ConvertAll(extras, x => x.Id);
             var extrasChanged = !item.ExtraIds.SequenceEqual(newExtraIds);
 
@@ -1879,7 +1879,7 @@ namespace MediaBrowser.Controller.Entities
         /// </summary>
         public virtual void ChangedExternally()
         {
-            ProviderManager.QueueRefresh(Id, new MetadataRefreshOptions(new DirectoryService(FileSystem)), RefreshPriority.High);
+            ProviderManager.QueueRefresh(Id, new MetadataRefreshOptions(), RefreshPriority.High);
         }
 
         /// <summary>

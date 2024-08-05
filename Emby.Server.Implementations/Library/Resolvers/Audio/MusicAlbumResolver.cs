@@ -25,19 +25,19 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
     {
         private readonly ILogger<MusicAlbumResolver> _logger;
         private readonly NamingOptions _namingOptions;
-        private readonly IDirectoryService _directoryService;
+        private readonly IFileSystem _fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MusicAlbumResolver"/> class.
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="namingOptions">The naming options.</param>
-        /// <param name="directoryService">The directory service.</param>
-        public MusicAlbumResolver(ILogger<MusicAlbumResolver> logger, NamingOptions namingOptions, IDirectoryService directoryService)
+        /// <param name="fileSystem">The file system.</param>
+        public MusicAlbumResolver(ILogger<MusicAlbumResolver> logger, NamingOptions namingOptions, IFileSystem fileSystem)
         {
             _logger = logger;
             _namingOptions = namingOptions;
-            _directoryService = directoryService;
+            _fileSystem = fileSystem;
         }
 
         /// <summary>
@@ -85,11 +85,10 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
         /// Determine if the supplied file data points to a music album.
         /// </summary>
         /// <param name="path">The path to check.</param>
-        /// <param name="directoryService">The directory service.</param>
         /// <returns><c>true</c> if the provided path points to a music album; otherwise, <c>false</c>.</returns>
-        public bool IsMusicAlbum(string path, IDirectoryService directoryService)
+        public bool IsMusicAlbum(string path)
         {
-            return ContainsMusic(directoryService.GetFileSystemEntries(path), true, directoryService);
+            return ContainsMusic(_fileSystem.GetFileSystemEntries(path).ToList(), true);
         }
 
         /// <summary>
@@ -112,7 +111,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
                 }
 
                 // If args contains music it's a music album
-                if (ContainsMusic(args.FileSystemChildren, true, _directoryService))
+                if (ContainsMusic(args.FileSystemChildren, true))
                 {
                     return true;
                 }
@@ -127,8 +126,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
         /// <returns><c>true</c> if the provided path list contains music; otherwise, <c>false</c>.</returns>
         private bool ContainsMusic(
             ICollection<FileSystemMetadata> list,
-            bool allowSubfolders,
-            IDirectoryService directoryService)
+            bool allowSubfolders)
         {
             // Check for audio files before digging down into directories
             var foundAudioFile = list.Any(fileSystemInfo => !fileSystemInfo.IsDirectory && AudioFileParser.IsAudioFile(fileSystemInfo.FullName, _namingOptions));
@@ -153,7 +151,7 @@ namespace Emby.Server.Implementations.Library.Resolvers.Audio
             var result = Parallel.ForEach(directories, (fileSystemInfo, state) =>
             {
                 var path = fileSystemInfo.FullName;
-                var hasMusic = ContainsMusic(directoryService.GetFileSystemEntries(path), false, directoryService);
+                var hasMusic = ContainsMusic(_fileSystem.GetFileSystemEntries(path).ToList(), false);
 
                 if (hasMusic)
                 {

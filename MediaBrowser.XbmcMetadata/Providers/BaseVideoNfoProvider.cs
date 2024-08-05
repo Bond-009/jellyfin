@@ -21,7 +21,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
         private readonly IProviderManager _providerManager;
         private readonly IUserManager _userManager;
         private readonly IUserDataManager _userDataManager;
-        private readonly IDirectoryService _directoryService;
 
         protected BaseVideoNfoProvider(
             ILogger<BaseVideoNfoProvider<T>> logger,
@@ -29,8 +28,7 @@ namespace MediaBrowser.XbmcMetadata.Providers
             IConfigurationManager config,
             IProviderManager providerManager,
             IUserManager userManager,
-            IUserDataManager userDataManager,
-            IDirectoryService directoryService)
+            IUserDataManager userDataManager)
             : base(fileSystem)
         {
             _logger = logger;
@@ -38,7 +36,6 @@ namespace MediaBrowser.XbmcMetadata.Providers
             _providerManager = providerManager;
             _userManager = userManager;
             _userDataManager = userDataManager;
-            _directoryService = directoryService;
         }
 
         /// <inheritdoc />
@@ -48,7 +45,7 @@ namespace MediaBrowser.XbmcMetadata.Providers
             {
                 Item = result.Item
             };
-            new MovieNfoParser(_logger, _config, _providerManager, _userManager, _userDataManager, _directoryService).Fetch(tmpItem, path, cancellationToken);
+            new MovieNfoParser(_logger, _config, _providerManager, _userManager, _userDataManager, FileSystem).Fetch(tmpItem, path, cancellationToken);
 
             result.Item = (T)tmpItem.Item;
             result.People = tmpItem.People;
@@ -57,10 +54,10 @@ namespace MediaBrowser.XbmcMetadata.Providers
         }
 
         /// <inheritdoc />
-        protected override FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService)
+        protected override FileSystemMetadata? GetXmlFile(ItemInfo info)
         {
             return MovieNfoSaver.GetMovieSavePaths(info)
-                .Select(directoryService.GetFile)
+                .Select(FileSystem.GetFileInfo)
                 .FirstOrDefault(i => i is not null);
         }
     }

@@ -169,7 +169,7 @@ namespace Emby.Server.Implementations.Collections
                         collection.Id,
                         options.ItemIdList.Select(x => new Guid(x)),
                         false,
-                        new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                        new MetadataRefreshOptions()
                         {
                             // The initial adding of items is going to create a local metadata file
                             // This will cause internet metadata to be skipped as a result
@@ -178,7 +178,7 @@ namespace Emby.Server.Implementations.Collections
                 }
                 else
                 {
-                    _providerManager.QueueRefresh(collection.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.High);
+                    _providerManager.QueueRefresh(collection.Id, new MetadataRefreshOptions(), RefreshPriority.High);
                 }
 
                 CollectionCreated?.Invoke(this, new CollectionCreatedEventArgs
@@ -198,7 +198,7 @@ namespace Emby.Server.Implementations.Collections
 
         /// <inheritdoc />
         public Task AddToCollectionAsync(Guid collectionId, IEnumerable<Guid> itemIds)
-            => AddToCollectionAsync(collectionId, itemIds, true, new MetadataRefreshOptions(new DirectoryService(_fileSystem)));
+            => AddToCollectionAsync(collectionId, itemIds, true, new MetadataRefreshOptions());
 
         private async Task AddToCollectionAsync(Guid collectionId, IEnumerable<Guid> ids, bool fireEvent, MetadataRefreshOptions refreshOptions)
         {
@@ -294,7 +294,7 @@ namespace Emby.Server.Implementations.Collections
             await collection.UpdateToRepositoryAsync(ItemUpdateType.MetadataEdit, CancellationToken.None).ConfigureAwait(false);
             _providerManager.QueueRefresh(
                 collection.Id,
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                new MetadataRefreshOptions()
                 {
                     ForceSave = true
                 },

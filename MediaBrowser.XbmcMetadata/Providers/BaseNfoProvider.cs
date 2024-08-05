@@ -13,12 +13,12 @@ namespace MediaBrowser.XbmcMetadata.Providers
     public abstract class BaseNfoProvider<T> : ILocalMetadataProvider<T>, IHasItemChangeMonitor
         where T : BaseItem, new()
     {
-        private readonly IFileSystem _fileSystem;
-
         protected BaseNfoProvider(IFileSystem fileSystem)
         {
-            _fileSystem = fileSystem;
+            FileSystem = fileSystem;
         }
+
+        protected IFileSystem FileSystem { get; }
 
         /// <inheritdoc />
         public string Name => BaseNfoSaver.SaverName;
@@ -26,12 +26,11 @@ namespace MediaBrowser.XbmcMetadata.Providers
         /// <inheritdoc />
         public Task<MetadataResult<T>> GetMetadata(
             ItemInfo info,
-            IDirectoryService directoryService,
             CancellationToken cancellationToken)
         {
             var result = new MetadataResult<T>();
 
-            var file = GetXmlFile(info, directoryService);
+            var file = GetXmlFile(info);
 
             if (file is null)
             {
@@ -63,20 +62,20 @@ namespace MediaBrowser.XbmcMetadata.Providers
         }
 
         /// <inheritdoc />
-        public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+        public bool HasChanged(BaseItem item)
         {
-            var file = GetXmlFile(new ItemInfo(item), directoryService);
+            var file = GetXmlFile(new ItemInfo(item));
 
             if (file is null)
             {
                 return false;
             }
 
-            return file.Exists && _fileSystem.GetLastWriteTimeUtc(file) > item.DateLastSaved;
+            return file.Exists && FileSystem.GetLastWriteTimeUtc(file) > item.DateLastSaved;
         }
 
         protected abstract void Fetch(MetadataResult<T> result, string path, CancellationToken cancellationToken);
 
-        protected abstract FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService);
+        protected abstract FileSystemMetadata? GetXmlFile(ItemInfo info);
     }
 }

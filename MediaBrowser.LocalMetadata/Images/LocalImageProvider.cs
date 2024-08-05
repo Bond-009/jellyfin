@@ -104,7 +104,7 @@ namespace MediaBrowser.LocalMetadata.Images
             return false;
         }
 
-        private static IEnumerable<FileSystemMetadata> GetFiles(BaseItem item, bool includeDirectories, IDirectoryService directoryService)
+        private IEnumerable<FileSystemMetadata> GetFiles(BaseItem item, bool includeDirectories)
         {
             if (!item.IsFileProtocol)
             {
@@ -119,7 +119,7 @@ namespace MediaBrowser.LocalMetadata.Images
                 return Enumerable.Empty<FileSystemMetadata>();
             }
 
-            return directoryService.GetFileSystemEntries(path)
+            return _fileSystem.GetFileSystemEntries(path)
                 .Where(i =>
                     (includeDirectories && i.IsDirectory)
                     || BaseItem.SupportedImageExtensions.Contains(i.Extension, StringComparison.OrdinalIgnoreCase))
@@ -127,13 +127,13 @@ namespace MediaBrowser.LocalMetadata.Images
         }
 
         /// <inheritdoc />
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item)
         {
-            var files = GetFiles(item, true, directoryService).ToList();
+            var files = GetFiles(item, true).ToList();
 
             var list = new List<LocalImageInfo>();
 
-            PopulateImages(item, list, files, true, directoryService);
+            PopulateImages(item, list, files, true);
 
             return list;
         }
@@ -143,11 +143,10 @@ namespace MediaBrowser.LocalMetadata.Images
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="path">The images path.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         /// <returns>The local image info.</returns>
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, string path, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, string path)
         {
-            return GetImages(item, new[] { path }, directoryService);
+            return GetImages(item, new[] { path });
         }
 
         /// <summary>
@@ -155,9 +154,8 @@ namespace MediaBrowser.LocalMetadata.Images
         /// </summary>
         /// <param name="item">The item.</param>
         /// <param name="paths">The image paths.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         /// <returns>The local image info.</returns>
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IEnumerable<string> paths, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IEnumerable<string> paths)
         {
             IEnumerable<FileSystemMetadata> files = paths.SelectMany(i => _fileSystem.GetFiles(i, BaseItem.SupportedImageExtensions, true, false));
 
@@ -166,18 +164,18 @@ namespace MediaBrowser.LocalMetadata.Images
 
             var list = new List<LocalImageInfo>();
 
-            PopulateImages(item, list, files.ToList(), false, directoryService);
+            PopulateImages(item, list, files.ToList(), false);
 
             return list;
         }
 
-        private void PopulateImages(BaseItem item, List<LocalImageInfo> images, List<FileSystemMetadata> files, bool supportParentSeriesFiles, IDirectoryService directoryService)
+        private void PopulateImages(BaseItem item, List<LocalImageInfo> images, List<FileSystemMetadata> files, bool supportParentSeriesFiles)
         {
             if (supportParentSeriesFiles)
             {
                 if (item is Season season)
                 {
-                    PopulateSeasonImagesFromSeriesFolder(season, images, directoryService);
+                    PopulateSeasonImagesFromSeriesFolder(season, images);
                 }
             }
 
@@ -399,7 +397,7 @@ namespace MediaBrowser.LocalMetadata.Images
             }
         }
 
-        private void PopulateSeasonImagesFromSeriesFolder(Season season, List<LocalImageInfo> images, IDirectoryService directoryService)
+        private void PopulateSeasonImagesFromSeriesFolder(Season season, List<LocalImageInfo> images)
         {
             var seasonNumber = season.IndexNumber;
 
@@ -409,7 +407,7 @@ namespace MediaBrowser.LocalMetadata.Images
                 return;
             }
 
-            var seriesFiles = GetFiles(series, false, directoryService).ToList();
+            var seriesFiles = GetFiles(series, false).ToList();
 
             // Try using the season name
             var prefix = season.Name.Replace(" ", string.Empty, StringComparison.Ordinal).ToLowerInvariant();

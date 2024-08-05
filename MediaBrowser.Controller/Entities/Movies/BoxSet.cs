@@ -82,11 +82,11 @@ namespace MediaBrowser.Controller.Entities.Movies
             return UnratedItem.Movie;
         }
 
-        protected override IEnumerable<BaseItem> GetNonCachedChildren(IDirectoryService directoryService)
+        protected override IEnumerable<BaseItem> GetNonCachedChildren()
         {
             if (IsLegacyBoxSet)
             {
-                return base.GetNonCachedChildren(directoryService);
+                return base.GetNonCachedChildren();
             }
 
             return Enumerable.Empty<BaseItem>();

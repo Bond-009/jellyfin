@@ -111,7 +111,11 @@ namespace MediaBrowser.Controller.Entities.Audio
             return base.IsSaveLocalMetadataEnabled();
         }
 
+<<<<<<< Updated upstream
         protected override async Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, IDirectoryService directoryService, CancellationToken cancellationToken)
+=======
+        protected override Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
+>>>>>>> Stashed changes
         {
             if (IsAccessedByName)
             {
@@ -119,7 +123,11 @@ namespace MediaBrowser.Controller.Entities.Audio
                 return;
             }
 
+<<<<<<< Updated upstream
             await base.ValidateChildrenInternal(progress, recursive, refreshChildMetadata, false, refreshOptions, directoryService, cancellationToken).ConfigureAwait(false);
+=======
+            return base.ValidateChildrenInternal(progress, recursive, refreshChildMetadata, false, refreshOptions, cancellationToken);
+>>>>>>> Stashed changes
         }
 
         public override List<string> GetUserDataKeys()

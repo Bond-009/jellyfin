@@ -35,11 +35,11 @@ namespace MediaBrowser.LocalMetadata.Images
         }
 
         /// <inheritdoc />
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item)
         {
             var collectionFolder = (CollectionFolder)item;
 
-            return new LocalImageProvider(_fileSystem).GetImages(item, collectionFolder.PhysicalLocations, directoryService);
+            return new LocalImageProvider(_fileSystem).GetImages(item, collectionFolder.PhysicalLocations);
         }
     }
 }

@@ -113,7 +113,6 @@ namespace Emby.Server.Implementations.Library
         /// <param name="imageProcessor">The image processor.</param>
         /// <param name="namingOptions">The naming options.</param>
         /// <param name="directoryService">The directory service.</param>
-        /// <param name="peopleRepository">The People Repository.</param>
         public LibraryManager(
             IServerApplicationHost appHost,
             ILoggerFactory loggerFactory,
@@ -129,8 +128,8 @@ namespace Emby.Server.Implementations.Library
             IItemRepository itemRepository,
             IImageProcessor imageProcessor,
             NamingOptions namingOptions,
-            IDirectoryService directoryService,
-            IPeopleRepository peopleRepository)
+            IPeopleRepository peopleRepository,
+            NamingOptions namingOptions)
         {
             _appHost = appHost;
             _logger = loggerFactory.CreateLogger<LibraryManager>();
@@ -148,7 +147,8 @@ namespace Emby.Server.Implementations.Library
             _cache = new ConcurrentDictionary<Guid, BaseItem>();
             _namingOptions = namingOptions;
             _peopleRepository = peopleRepository;
-            _extraResolver = new ExtraResolver(loggerFactory.CreateLogger<ExtraResolver>(), namingOptions, directoryService);
+
+            _extraResolver = new ExtraResolver(loggerFactory.CreateLogger<ExtraResolver>(), namingOptions);
 
             _configurationManager.ConfigurationUpdated += ConfigurationUpdated;
 
@@ -537,12 +537,11 @@ namespace Emby.Server.Implementations.Library
             return key.GetMD5();
         }
 
-        public BaseItem? ResolvePath(FileSystemMetadata fileInfo, Folder? parent = null, IDirectoryService? directoryService = null)
-            => ResolvePath(fileInfo, directoryService ?? new DirectoryService(_fileSystem), null, parent);
+        public BaseItem? ResolvePath(FileSystemMetadata fileInfo, Folder? parent = null)
+            => ResolvePath(fileInfo, parent);
 
         private BaseItem? ResolvePath(
             FileSystemMetadata fileInfo,
-            IDirectoryService directoryService,
             IItemResolver[]? resolvers,
             Folder? parent = null,
             CollectionType? collectionType = null,
@@ -584,7 +583,7 @@ namespace Emby.Server.Implementations.Library
 
                 try
                 {
-                    files = FileData.GetFilteredFileSystemEntries(directoryService, args.Path, _fileSystem, _appHost, _logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: isPhysicalRoot || isVf);
+                    files = FileData.GetFilteredFileSystemEntries(args.Path, _fileSystem, _appHost, _logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: isPhysicalRoot || isVf);
                 }
                 catch (Exception ex)
                 {
@@ -655,14 +654,13 @@ namespace Emby.Server.Implementations.Library
             return !args.ContainsFileSystemEntryByName(".ignore");
         }
 
-        public IEnumerable<BaseItem> ResolvePaths(IEnumerable<FileSystemMetadata> files, IDirectoryService directoryService, Folder parent, LibraryOptions libraryOptions, CollectionType? collectionType = null)
+        public IEnumerable<BaseItem> ResolvePaths(IEnumerable<FileSystemMetadata> files, Folder parent, LibraryOptions libraryOptions, CollectionType? collectionType = null)
         {
-            return ResolvePaths(files, directoryService, parent, libraryOptions, collectionType, EntityResolvers);
+            return ResolvePaths(files, parent, libraryOptions, collectionType, EntityResolvers);
         }
 
         public IEnumerable<BaseItem> ResolvePaths(
             IEnumerable<FileSystemMetadata> files,
-            IDirectoryService directoryService,
             Folder parent,
             LibraryOptions libraryOptions,
             CollectionType? collectionType,
@@ -676,24 +674,23 @@ namespace Emby.Server.Implementations.Library
 
                 foreach (var resolver in multiItemResolvers)
                 {
-                    var result = resolver.ResolveMultiple(parent, fileList, collectionType, directoryService);
+                    var result = resolver.ResolveMultiple(parent, fileList, collectionType);
 
                     if (result?.Items.Count > 0)
                     {
                         var items = result.Items;
-                        items.RemoveAll(item => !ResolverHelper.SetInitialItemValues(item, parent, this, directoryService));
-                        items.AddRange(ResolveFileList(result.ExtraFiles, directoryService, parent, collectionType, resolvers, libraryOptions));
+                        items.RemoveAll(item => !ResolverHelper.SetInitialItemValues(item, parent, this));
+                        items.AddRange(ResolveFileList(result.ExtraFiles, parent, collectionType, resolvers, libraryOptions));
                         return items;
                     }
                 }
             }
 
-            return ResolveFileList(fileList, directoryService, parent, collectionType, resolvers, libraryOptions);
+            return ResolveFileList(fileList, parent, collectionType, resolvers, libraryOptions);
         }
 
         private IEnumerable<BaseItem> ResolveFileList(
             IReadOnlyList<FileSystemMetadata> fileList,
-            IDirectoryService directoryService,
             Folder? parent,
             CollectionType? collectionType,
             IItemResolver[]? resolvers,
@@ -706,7 +703,7 @@ namespace Emby.Server.Implementations.Library
                 BaseItem? result = null;
                 try
                 {
-                    result = ResolvePath(file, directoryService, resolvers, parent, collectionType, libraryOptions);
+                    result = ResolvePath(file, resolvers, parent, collectionType, libraryOptions);
                 }
                 catch (Exception ex)
                 {
@@ -988,7 +985,7 @@ namespace Emby.Server.Implementations.Library
             // Ensure the location is available.
             Directory.CreateDirectory(_configurationManager.ApplicationPaths.PeoplePath);
 
-            return new PeopleValidator(this, _logger, _fileSystem).ValidatePeople(cancellationToken, progress);
+            return new PeopleValidator(this, _logger).ValidatePeople(cancellationToken, progress);
         }
 
         /// <summary>
@@ -1034,7 +1031,7 @@ namespace Emby.Server.Implementations.Library
             // Start by just validating the children of the root, but go no further
             await RootFolder.ValidateChildren(
                 new Progress<double>(),
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem)),
+                new MetadataRefreshOptions(),
                 recursive: false,
                 allowRemoveRoot: removeRoot,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -1043,7 +1040,7 @@ namespace Emby.Server.Implementations.Library
 
             await GetUserRootFolder().ValidateChildren(
                 new Progress<double>(),
-                new MetadataRefreshOptions(new DirectoryService(_fileSystem)),
+                new MetadataRefreshOptions(),
                 recursive: false,
                 allowRemoveRoot: removeRoot,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -1072,7 +1069,7 @@ namespace Emby.Server.Implementations.Library
             var innerProgress = new Progress<double>(pct => progress.Report(pct * 0.96));
 
             // Validate the entire media library
-            await RootFolder.ValidateChildren(innerProgress, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), recursive: true, cancellationToken: cancellationToken).ConfigureAwait(false);
+            await RootFolder.ValidateChildren(innerProgress, new MetadataRefreshOptions(), recursive: true, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             progress.Report(96);
 
@@ -2246,7 +2243,7 @@ namespace Emby.Server.Implementations.Library
             if (refresh)
             {
                 item.UpdateToRepositoryAsync(ItemUpdateType.MetadataImport, CancellationToken.None).GetAwaiter().GetResult();
-                ProviderManager.QueueRefresh(item.Id, new MetadataRefreshOptions(new DirectoryService(_fileSystem)), RefreshPriority.Normal);
+                ProviderManager.QueueRefresh(item.Id, new MetadataRefreshOptions(), RefreshPriority.Normal);
             }
 
             return item;
@@ -2305,7 +2302,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions()
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true
@@ -2369,7 +2366,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions()
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true
@@ -2445,7 +2442,7 @@ namespace Emby.Server.Implementations.Library
             {
                 ProviderManager.QueueRefresh(
                     item.Id,
-                    new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                    new MetadataRefreshOptions()
                     {
                         // Need to force save to increment DateLastSaved
                         ForceSave = true
@@ -2661,7 +2658,7 @@ namespace Emby.Server.Implementations.Library
             };
         }
 
-        public IEnumerable<BaseItem> FindExtras(BaseItem owner, IReadOnlyList<FileSystemMetadata> fileSystemChildren, IDirectoryService directoryService)
+        public IEnumerable<BaseItem> FindExtras(BaseItem owner, IReadOnlyList<FileSystemMetadata> fileSystemChildren)
         {
             var ownerVideoInfo = VideoResolver.Resolve(owner.Path, owner.IsFolder, _namingOptions);
             if (ownerVideoInfo is null)
@@ -2702,7 +2699,7 @@ namespace Emby.Server.Implementations.Library
 
             BaseItem? GetExtra(FileSystemMetadata file, ExtraType extraType)
             {
-                var extra = ResolvePath(_fileSystem.GetFileInfo(file.FullName), directoryService, _extraResolver.GetResolversForExtraType(extraType));
+                var extra = ResolvePath(_fileSystem.GetFileInfo(file.FullName), _extraResolver.GetResolversForExtraType(extraType));
                 if (extra is not Video && extra is not Audio)
                 {
                     return null;

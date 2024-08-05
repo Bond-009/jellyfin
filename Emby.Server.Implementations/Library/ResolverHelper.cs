@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.IO;
 
 namespace Emby.Server.Implementations.Library
@@ -19,10 +18,9 @@ namespace Emby.Server.Implementations.Library
         /// <param name="item">The item.</param>
         /// <param name="parent">The parent.</param>
         /// <param name="libraryManager">The library manager.</param>
-        /// <param name="directoryService">The directory service.</param>
         /// <returns>True if initializing was successful.</returns>
         /// <exception cref="ArgumentException">Item must have a path.</exception>
-        public static bool SetInitialItemValues(BaseItem item, Folder? parent, ILibraryManager libraryManager, IDirectoryService directoryService)
+        public static bool SetInitialItemValues(BaseItem item, Folder? parent, ILibraryManager libraryManager)
         {
             // This version of the below method has no ItemResolveArgs, so we have to require the path already being set
             ArgumentException.ThrowIfNullOrEmpty(item.Path);
@@ -39,7 +37,7 @@ namespace Emby.Server.Implementations.Library
                 item.GetParents().Any(i => i.IsLocked);
 
             // Make sure DateCreated and DateModified have values
-            var fileInfo = directoryService.GetFileSystemEntry(item.Path);
+            var fileInfo = BaseItem.FileSystem.GetFileSystemInfo(item.Path);
             if (fileInfo is null)
             {
                 return false;

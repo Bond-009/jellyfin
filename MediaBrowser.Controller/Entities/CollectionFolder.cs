@@ -178,9 +178,9 @@ namespace MediaBrowser.Controller.Entities
             return true;
         }
 
-        protected override FileSystemMetadata[] GetFileSystemChildren(IDirectoryService directoryService)
+        protected override FileSystemMetadata[] GetFileSystemChildren()
         {
-            return CreateResolveArgs(directoryService, true).FileSystemChildren;
+            return CreateResolveArgs(true).FileSystemChildren;
         }
 
         public override bool RequiresRefresh()
@@ -191,7 +191,7 @@ namespace MediaBrowser.Controller.Entities
             {
                 var locations = PhysicalLocations;
 
-                var newLocations = CreateResolveArgs(new DirectoryService(FileSystem), false).PhysicalLocations;
+                var newLocations = CreateResolveArgs(false).PhysicalLocations;
 
                 if (!locations.SequenceEqual(newLocations))
                 {
@@ -278,7 +278,7 @@ namespace MediaBrowser.Controller.Entities
             return changed;
         }
 
-        private ItemResolveArgs CreateResolveArgs(IDirectoryService directoryService, bool setPhysicalLocations)
+        private ItemResolveArgs CreateResolveArgs(bool setPhysicalLocations)
         {
             var path = ContainingFolderPath;
 
@@ -294,7 +294,7 @@ namespace MediaBrowser.Controller.Entities
             {
                 var flattenFolderDepth = 0;
 
-                var files = FileData.GetFilteredFileSystemEntries(directoryService, args.Path, FileSystem, ApplicationHost, Logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: true);
+                var files = FileData.GetFilteredFileSystemEntries(args.Path, FileSystem, ApplicationHost, Logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: true);
 
                 args.FileSystemChildren = files;
             }
@@ -318,10 +318,9 @@ namespace MediaBrowser.Controller.Entities
         /// <param name="refreshChildMetadata">if set to <c>true</c> [refresh child metadata].</param>
         /// <param name="allowRemoveRoot">remove item even this folder is root.</param>
         /// <param name="refreshOptions">The refresh options.</param>
-        /// <param name="directoryService">The directory service.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Task.</returns>
-        protected override Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, IDirectoryService directoryService, CancellationToken cancellationToken)
+        protected override Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
         {
             return Task.CompletedTask;
         }

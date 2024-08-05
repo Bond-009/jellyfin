@@ -639,7 +639,7 @@ public class UserLibraryController : BaseJellyfinApiController
 
             if (!hasMetadata)
             {
-                var options = new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+                var options = new MetadataRefreshOptions()
                 {
                     MetadataRefreshMode = MetadataRefreshMode.FullRefresh,
                     ImageRefreshMode = MetadataRefreshMode.FullRefresh,

@@ -613,7 +613,7 @@ public sealed class RecordingsManager : IRecordingsManager, IDisposable
         _logger.LogInformation("Refreshing recording parent {Path}", item.Path);
         _providerManager.QueueRefresh(
             item.Id,
-            new MetadataRefreshOptions(new DirectoryService(_fileSystem))
+            new MetadataRefreshOptions()
             {
                 RefreshPaths =
                 [

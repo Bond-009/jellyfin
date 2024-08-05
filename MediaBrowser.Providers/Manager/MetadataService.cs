@@ -58,11 +58,11 @@ namespace MediaBrowser.Providers.Manager
 
         public virtual int Order => 0;
 
-        private FileSystemMetadata TryGetFile(string path, IDirectoryService directoryService)
+        private FileSystemMetadata TryGetFile(string path)
         {
             try
             {
-                return directoryService.GetFile(path);
+                return FileSystem.GetFileInfo(path);
             }
             catch (Exception ex)
             {
@@ -192,7 +192,36 @@ namespace MediaBrowser.Providers.Manager
 
             if (hasRefreshedMetadata && hasRefreshedImages)
             {
+<<<<<<< Updated upstream
                 item.DateLastRefreshed = DateTime.UtcNow;
+=======
+                if (item.IsFileProtocol)
+                {
+                    var file = TryGetFile(item.Path);
+                    if (file is not null)
+                    {
+                        item.DateModified = file.LastWriteTimeUtc;
+                    }
+                }
+
+                // If any of these properties are set then make sure the updateType is not None, just to force everything to save
+                if (refreshOptions.ForceSave || refreshOptions.ReplaceAllMetadata)
+                {
+                    updateType |= ItemUpdateType.MetadataDownload;
+                }
+
+                if (hasRefreshedMetadata && hasRefreshedImages)
+                {
+                    item.DateLastRefreshed = DateTime.UtcNow;
+                }
+                else
+                {
+                    item.DateLastRefreshed = default;
+                }
+
+                // Save to database
+                await SaveItemAsync(metadataResult, updateType, cancellationToken).ConfigureAwait(false);
+>>>>>>> Stashed changes
             }
 
             updateType = await SaveInternal(item, refreshOptions, updateType, isFirstRefresh, requiresRefresh, metadataResult, cancellationToken).ConfigureAwait(false);
@@ -555,7 +584,7 @@ namespace MediaBrowser.Providers.Manager
                     {
                         if (i is IHasItemChangeMonitor hasFileChangeMonitor)
                         {
-                            return HasChanged(item, hasFileChangeMonitor, options.DirectoryService);
+                            return HasChanged(item, hasFileChangeMonitor);
                         }
 
                         return false;
@@ -622,7 +651,7 @@ namespace MediaBrowser.Providers.Manager
                     {
                         if (i is IHasItemChangeMonitor hasFileChangeMonitor)
                         {
-                            return HasChanged(item, hasFileChangeMonitor, options.DirectoryService);
+                            return HasChanged(item, hasFileChangeMonitor);
                         }
 
                         return false;
@@ -695,7 +724,7 @@ namespace MediaBrowser.Providers.Manager
 
                     try
                     {
-                        var localItem = await provider.GetMetadata(itemInfo, options.DirectoryService, cancellationToken).ConfigureAwait(false);
+                        var localItem = await provider.GetMetadata(itemInfo, cancellationToken).ConfigureAwait(false);
 
                         if (localItem.HasMetadata)
                         {
@@ -877,11 +906,11 @@ namespace MediaBrowser.Providers.Manager
             }
         }
 
-        private bool HasChanged(BaseItem item, IHasItemChangeMonitor changeMonitor, IDirectoryService directoryService)
+        private bool HasChanged(BaseItem item, IHasItemChangeMonitor changeMonitor)
         {
             try
             {
-                var hasChanged = changeMonitor.HasChanged(item, directoryService);
+                var hasChanged = changeMonitor.HasChanged(item);
 
                 if (hasChanged)
                 {

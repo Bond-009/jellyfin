@@ -13,7 +13,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Globalization;
 using MediaBrowser.Model.IO;
 using MediaBrowser.Model.Tasks;
@@ -134,8 +133,6 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
                 previouslyFailedImages = new List<string>();
             }
 
-            var directoryService = new DirectoryService(_fileSystem);
-
             foreach (var video in videos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -148,7 +145,7 @@ namespace Emby.Server.Implementations.ScheduledTasks.Tasks
                 {
                     var chapters = _chapterRepository.GetChapters(video.Id);
 
-                    var success = await _encodingManager.RefreshChapterImages(video, directoryService, chapters, extract, true, cancellationToken).ConfigureAwait(false);
+                    var success = await _encodingManager.RefreshChapterImages(video, chapters, extract, true, cancellationToken).ConfigureAwait(false);
 
                     if (!success)
                     {

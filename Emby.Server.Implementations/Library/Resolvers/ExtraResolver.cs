@@ -5,7 +5,6 @@ using Emby.Naming.Common;
 using Emby.Naming.Video;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
 using MediaBrowser.Model.Entities;
 using Microsoft.Extensions.Logging;
@@ -27,13 +26,12 @@ namespace Emby.Server.Implementations.Library.Resolvers
         /// </summary>
         /// <param name="logger">The logger.</param>
         /// <param name="namingOptions">An instance of <see cref="NamingOptions"/>.</param>
-        /// <param name="directoryService">The directory service.</param>
-        public ExtraResolver(ILogger<ExtraResolver> logger, NamingOptions namingOptions, IDirectoryService directoryService)
-            : base(logger, namingOptions, directoryService)
+        public ExtraResolver(ILogger<ExtraResolver> logger, NamingOptions namingOptions)
+            : base(logger, namingOptions)
         {
             _namingOptions = namingOptions;
-            _trailerResolvers = new IItemResolver[] { new GenericVideoResolver<Trailer>(logger, namingOptions, directoryService) };
-            _videoResolvers = new IItemResolver[] { this };
+            _trailerResolvers = [new GenericVideoResolver<Trailer>(logger, namingOptions)];
+            _videoResolvers = [this];
         }
 
         protected override Video Resolve(ItemResolveArgs args)

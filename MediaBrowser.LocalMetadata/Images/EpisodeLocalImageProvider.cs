@@ -16,6 +16,17 @@ namespace MediaBrowser.LocalMetadata.Images
     /// </summary>
     public class EpisodeLocalImageProvider : ILocalImageProvider, IHasOrder
     {
+        private readonly IFileSystem _fileSystem;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EpisodeLocalImageProvider"/> class.
+        /// </summary>
+        /// <param name="fileSystem">The file system.</param>
+        public EpisodeLocalImageProvider(IFileSystem fileSystem)
+        {
+            _fileSystem = fileSystem;
+        }
+
         /// <inheritdoc />
         public string Name => "Local Images";
 
@@ -29,7 +40,7 @@ namespace MediaBrowser.LocalMetadata.Images
         }
 
         /// <inheritdoc />
-        public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
+        public IEnumerable<LocalImageInfo> GetImages(BaseItem item)
         {
             var parentPath = Path.GetDirectoryName(item.Path);
             if (parentPath is null)
@@ -37,22 +48,22 @@ namespace MediaBrowser.LocalMetadata.Images
                 return Enumerable.Empty<LocalImageInfo>();
             }
 
-            var parentPathFiles = directoryService.GetFiles(parentPath);
+            var parentPathFiles = _fileSystem.GetFiles(parentPath);
             var nameWithoutExtension = Path.GetFileNameWithoutExtension(item.Path.AsSpan()).ToString();
 
             var images = GetImageFilesFromFolder(nameWithoutExtension, parentPathFiles);
 
-            var metadataSubDir = directoryService.GetDirectories(parentPath).FirstOrDefault(d => d.Name.Equals("metadata", StringComparison.Ordinal));
+            var metadataSubDir = _fileSystem.GetDirectories(parentPath).FirstOrDefault(d => d.Name.Equals("metadata", StringComparison.Ordinal));
             if (metadataSubDir is not null)
             {
-                var files = directoryService.GetFiles(metadataSubDir.FullName);
+                var files = _fileSystem.GetFiles(metadataSubDir.FullName);
                 images.AddRange(GetImageFilesFromFolder(nameWithoutExtension, files));
             }
 
             return images;
         }
 
-        private List<LocalImageInfo> GetImageFilesFromFolder(ReadOnlySpan<char> filenameWithoutExtension, List<FileSystemMetadata> filePaths)
+        private List<LocalImageInfo> GetImageFilesFromFolder(ReadOnlySpan<char> filenameWithoutExtension, IEnumerable<FileSystemMetadata> filePaths)
         {
             var list = new List<LocalImageInfo>(1);
             var thumbName = string.Concat(filenameWithoutExtension, "-thumb");

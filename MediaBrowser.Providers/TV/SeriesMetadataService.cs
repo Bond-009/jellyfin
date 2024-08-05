@@ -263,7 +263,7 @@ namespace MediaBrowser.Providers.TV
             };
 
             series.AddChild(season);
-            await season.RefreshMetadata(new MetadataRefreshOptions(new DirectoryService(FileSystem)), cancellationToken).ConfigureAwait(false);
+            await season.RefreshMetadata(new MetadataRefreshOptions(), cancellationToken).ConfigureAwait(false);
         }
 
         private string GetValidSeasonNameForSeries(Series series, string? seasonName, int? seasonNumber)

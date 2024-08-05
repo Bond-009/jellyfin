@@ -56,7 +56,7 @@ namespace Jellyfin.LiveTv.Channels
         }
 
         /// <inheritdoc />
-        public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+        public bool HasChanged(BaseItem item)
         {
             return GetSupportedImages(item).Any(i => !item.HasImage(i));
         }

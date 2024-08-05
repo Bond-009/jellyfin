@@ -10,7 +10,6 @@ using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
-using MediaBrowser.Model.Entities;
 
 namespace Emby.Server.Implementations.Library.Resolvers
 {
@@ -21,7 +20,6 @@ namespace Emby.Server.Implementations.Library.Resolvers
     {
         private readonly IImageProcessor _imageProcessor;
         private readonly NamingOptions _namingOptions;
-        private readonly IDirectoryService _directoryService;
 
         private static readonly string[] _ignoreFiles = new[]
         {
@@ -41,12 +39,10 @@ namespace Emby.Server.Implementations.Library.Resolvers
         /// </summary>
         /// <param name="imageProcessor">The image processor.</param>
         /// <param name="namingOptions">The naming options.</param>
-        /// <param name="directoryService">The directory service.</param>
-        public PhotoResolver(IImageProcessor imageProcessor, NamingOptions namingOptions, IDirectoryService directoryService)
+        public PhotoResolver(IImageProcessor imageProcessor, NamingOptions namingOptions)
         {
             _imageProcessor = imageProcessor;
             _namingOptions = namingOptions;
-            _directoryService = directoryService;
         }
 
         /// <summary>
@@ -69,12 +65,12 @@ namespace Emby.Server.Implementations.Library.Resolvers
                         var filename = Path.GetFileNameWithoutExtension(args.Path.AsSpan());
 
                         // Make sure the image doesn't belong to a video file
-                        var files = _directoryService.GetFiles(Path.GetDirectoryName(args.Path)
+                        var files = Directory.EnumerateFiles(Path.GetDirectoryName(args.Path)
                             ?? throw new InvalidOperationException("Path can't be a root directory."));
 
                         foreach (var file in files)
                         {
-                            if (IsOwnedByMedia(_namingOptions, file.FullName, filename))
+                            if (IsOwnedByMedia(_namingOptions, file, filename))
                             {
                                 return null;
                             }

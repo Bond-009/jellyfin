@@ -51,7 +51,6 @@ namespace Emby.Server.Implementations.Library
         private readonly IMediaEncoder _mediaEncoder;
         private readonly ILocalizationManager _localizationManager;
         private readonly IApplicationPaths _appPaths;
-        private readonly IDirectoryService _directoryService;
         private readonly IMediaStreamRepository _mediaStreamRepository;
         private readonly IMediaAttachmentRepository _mediaAttachmentRepository;
         private readonly ConcurrentDictionary<string, ILiveStream> _openStreams = new ConcurrentDictionary<string, ILiveStream>(StringComparer.OrdinalIgnoreCase);
@@ -71,9 +70,9 @@ namespace Emby.Server.Implementations.Library
             IFileSystem fileSystem,
             IUserDataManager userDataManager,
             IMediaEncoder mediaEncoder,
-            IDirectoryService directoryService,
             IMediaStreamRepository mediaStreamRepository,
-            IMediaAttachmentRepository mediaAttachmentRepository)
+            IMediaAttachmentRepository mediaAttachmentRepository,
+            IMediaEncoder mediaEncoder)
         {
             _appHost = appHost;
             _itemRepo = itemRepo;
@@ -85,7 +84,6 @@ namespace Emby.Server.Implementations.Library
             _mediaEncoder = mediaEncoder;
             _localizationManager = localizationManager;
             _appPaths = applicationPaths;
-            _directoryService = directoryService;
             _mediaStreamRepository = mediaStreamRepository;
             _mediaAttachmentRepository = mediaAttachmentRepository;
         }
@@ -176,7 +174,7 @@ namespace Emby.Server.Implementations.Library
                     || (item.MediaType == MediaType.Audio && mediaSources[0].MediaStreams.All(i => i.Type != MediaStreamType.Audio))))
             {
                 await item.RefreshMetadata(
-                    new MetadataRefreshOptions(_directoryService)
+                    new MetadataRefreshOptions()
                     {
                         EnableRemoteContentProbe = true,
                         MetadataRefreshMode = MetadataRefreshMode.FullRefresh

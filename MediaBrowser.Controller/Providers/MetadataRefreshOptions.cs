@@ -12,14 +12,14 @@ namespace MediaBrowser.Controller.Providers
 {
     public class MetadataRefreshOptions : ImageRefreshOptions
     {
-        public MetadataRefreshOptions(IDirectoryService directoryService)
-            : base(directoryService)
+        public MetadataRefreshOptions()
+            : base()
         {
             MetadataRefreshMode = MetadataRefreshMode.Default;
         }
 
         public MetadataRefreshOptions(MetadataRefreshOptions copy)
-            : base(copy.DirectoryService)
+            : base()
         {
             MetadataRefreshMode = copy.MetadataRefreshMode;
             ForceSave = copy.ForceSave;

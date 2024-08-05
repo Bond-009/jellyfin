@@ -20,7 +20,7 @@ namespace MediaBrowser.LocalMetadata
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         protected BaseXmlProvider(IFileSystem fileSystem)
         {
-            this.FileSystem = fileSystem;
+            FileSystem = fileSystem;
         }
 
         /// <inheritdoc />
@@ -39,17 +39,15 @@ namespace MediaBrowser.LocalMetadata
         /// Gets metadata for item.
         /// </summary>
         /// <param name="info">The item info.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The metadata for item.</returns>
         public Task<MetadataResult<T>> GetMetadata(
             ItemInfo info,
-            IDirectoryService directoryService,
             CancellationToken cancellationToken)
         {
             var result = new MetadataResult<T>();
 
-            var file = GetXmlFile(info, directoryService);
+            var file = GetXmlFile(info);
 
             if (file is null)
             {
@@ -89,14 +87,13 @@ namespace MediaBrowser.LocalMetadata
         /// Get metadata from xml file.
         /// </summary>
         /// <param name="info">Item inf.</param>
-        /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
         /// <returns>The file system metadata.</returns>
-        protected abstract FileSystemMetadata? GetXmlFile(ItemInfo info, IDirectoryService directoryService);
+        protected abstract FileSystemMetadata? GetXmlFile(ItemInfo info);
 
         /// <inheritdoc />
-        public bool HasChanged(BaseItem item, IDirectoryService directoryService)
+        public bool HasChanged(BaseItem item)
         {
-            var file = GetXmlFile(new ItemInfo(item), directoryService);
+            var file = GetXmlFile(new ItemInfo(item));
 
             if (file is null)
             {

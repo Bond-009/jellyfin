@@ -9,18 +9,15 @@ namespace MediaBrowser.Controller.Providers
 {
     public class ImageRefreshOptions
     {
-        public ImageRefreshOptions(IDirectoryService directoryService)
+        public ImageRefreshOptions()
         {
             ImageRefreshMode = MetadataRefreshMode.Default;
-            DirectoryService = directoryService;
 
             ReplaceImages = Array.Empty<ImageType>();
             IsAutomated = true;
         }
 
         public MetadataRefreshMode ImageRefreshMode { get; set; }
-
-        public IDirectoryService DirectoryService { get; private set; }
 
         public bool ReplaceAllImages { get; set; }
 

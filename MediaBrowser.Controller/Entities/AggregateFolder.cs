@@ -59,9 +59,9 @@ namespace MediaBrowser.Controller.Entities
             return false;
         }
 
-        protected override FileSystemMetadata[] GetFileSystemChildren(IDirectoryService directoryService)
+        protected override FileSystemMetadata[] GetFileSystemChildren()
         {
-            return CreateResolveArgs(directoryService, true).FileSystemChildren;
+            return CreateResolveArgs(true).FileSystemChildren;
         }
 
         protected override IReadOnlyList<BaseItem> LoadChildren()
@@ -95,7 +95,7 @@ namespace MediaBrowser.Controller.Entities
             {
                 var locations = PhysicalLocations;
 
-                var newLocations = CreateResolveArgs(new DirectoryService(FileSystem), false).PhysicalLocations;
+                var newLocations = CreateResolveArgs(false).PhysicalLocations;
 
                 if (!locations.SequenceEqual(newLocations))
                 {
@@ -115,7 +115,7 @@ namespace MediaBrowser.Controller.Entities
             return changed;
         }
 
-        private ItemResolveArgs CreateResolveArgs(IDirectoryService directoryService, bool setPhysicalLocations)
+        private ItemResolveArgs CreateResolveArgs(bool setPhysicalLocations)
         {
             ClearCache();
 
@@ -132,7 +132,7 @@ namespace MediaBrowser.Controller.Entities
                 // When resolving the root, we need it's grandchildren (children of user views)
                 var flattenFolderDepth = 2;
 
-                var files = FileData.GetFilteredFileSystemEntries(directoryService, args.Path, FileSystem, CollectionFolder.ApplicationHost, Logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: true);
+                var files = FileData.GetFilteredFileSystemEntries(args.Path, FileSystem, CollectionFolder.ApplicationHost, Logger, args, flattenFolderDepth: flattenFolderDepth, resolveShortcuts: true);
 
                 // Need to remove subpaths that may have been resolved from shortcuts
                 // Example: if \\server\movies exists, then strip out \\server\movies\action
@@ -150,16 +150,16 @@ namespace MediaBrowser.Controller.Entities
             return args;
         }
 
-        protected override IEnumerable<BaseItem> GetNonCachedChildren(IDirectoryService directoryService)
+        protected override IEnumerable<BaseItem> GetNonCachedChildren()
         {
-            return base.GetNonCachedChildren(directoryService).Concat(_virtualChildren);
+            return base.GetNonCachedChildren().Concat(_virtualChildren);
         }
 
-        protected override async Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, IDirectoryService directoryService, CancellationToken cancellationToken)
+        protected override async Task ValidateChildrenInternal(IProgress<double> progress, bool recursive, bool refreshChildMetadata, bool allowRemoveRoot, MetadataRefreshOptions refreshOptions, CancellationToken cancellationToken)
         {
             ClearCache();
 
-            await base.ValidateChildrenInternal(progress, recursive, refreshChildMetadata, allowRemoveRoot, refreshOptions, directoryService, cancellationToken)
+            await base.ValidateChildrenInternal(progress, recursive, refreshChildMetadata, allowRemoveRoot, refreshOptions, cancellationToken)
                 .ConfigureAwait(false);
 
             ClearCache();
