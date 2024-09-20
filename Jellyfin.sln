@@ -91,6 +91,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.LiveTv.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.LiveTv", "src\Jellyfin.LiveTv\Jellyfin.LiveTv.csproj", "{8C6B2B13-58A4-4506-9DAB-1F882A093FE0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Drawing.ImageSharp", "src\Jellyfin.Drawing.ImageSharp\Jellyfin.Drawing.ImageSharp.csproj", "{154872D9-6C12-4007-96E3-8F70A58386CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
