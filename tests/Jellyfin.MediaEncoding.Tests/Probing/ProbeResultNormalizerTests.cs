@@ -60,7 +60,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_MetaData_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_metadata.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_metadata.mkv", MediaProtocol.File);
 
             Assert.Equal("mkv", res.Container);
@@ -119,7 +119,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_Mp4MetaData_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_mp4_metadata.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
 
             // subtitle handling requires a localization object, set a mock to return the input string
             var mockLocalization = new Mock<ILocalizationManager>();
@@ -189,7 +189,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_TS_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_ts.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
 
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_metadata.mkv", MediaProtocol.File);
 
@@ -202,7 +202,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_WebM_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_webm.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
 
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_metadata.webm", MediaProtocol.File);
 
@@ -217,7 +217,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_WebM_Like_Mkv()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_web_like_mkv_with_subtitle.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
 
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_metadata.mkv", MediaProtocol.File);
 
@@ -230,7 +230,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_progressive_no_field_order.json");
 
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_progressive_no_field_order.mp4", MediaProtocol.File);
 
             Assert.Equal(2, res.MediaStreams.Count);
@@ -261,7 +261,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_progressive_no_field_order2.json");
 
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_progressive_no_field_order2.mp4", MediaProtocol.File);
 
             Assert.Single(res.MediaStreams);
@@ -292,7 +292,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_interlaced.json");
 
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_interlaced.mp4", MediaProtocol.File);
 
             Assert.Single(res.MediaStreams);
@@ -323,7 +323,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/video_single_frame_mjpeg.json");
 
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/video_interlaced.mp4", MediaProtocol.File);
 
             Assert.Equal(3, res.MediaStreams.Count);
@@ -356,7 +356,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_MusicVideo_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/music_video_metadata.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, VideoType.VideoFile, false, "Test Data/Probing/music_video.mkv", MediaProtocol.File);
 
             Assert.Equal("The Title", res.Name);
@@ -373,7 +373,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_GivenOriginalDateContainsOnlyYear_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/music_year_only_metadata.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, null, true, "Test Data/Probing/music.flac", MediaProtocol.File);
 
             Assert.Equal("Baker Street", res.Name);
@@ -393,7 +393,7 @@ namespace Jellyfin.MediaEncoding.Tests.Probing
         public void GetMediaInfo_Music_Success()
         {
             var bytes = File.ReadAllBytes("Test Data/Probing/music_metadata.json");
-            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions);
+            var internalMediaInfoResult = JsonSerializer.Deserialize<InternalMediaInfoResult>(bytes, _jsonOptions)!;
             MediaInfo res = _probeResultNormalizer.GetMediaInfo(internalMediaInfoResult, null, true, "Test Data/Probing/music.flac", MediaProtocol.File);
 
             Assert.Equal("UP NO MORE", res.Name);
